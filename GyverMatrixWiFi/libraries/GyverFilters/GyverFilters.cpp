@@ -26,6 +26,7 @@ float GFilterRA::filteredTime(int16_t value) {
 		_filterTimer = millis();
 		return GFilterRA::filtered(value);
 	}
+	return _lastValue;
 }
 
 float GFilterRA::filteredTime(float value) {
@@ -33,6 +34,7 @@ float GFilterRA::filteredTime(float value) {
 		_filterTimer = millis();
 		return GFilterRA::filtered(value);
 	}
+	return _lastValue;
 }
 
 float GFilterRA::filtered(int16_t value) {
