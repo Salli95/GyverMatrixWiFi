@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GyverMatrix Cloud Web Control</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon"></div>
+    <span>GyverMatrix</span>
+  </div>
+  <div class="connection-bar">
+    <div class="status-indicator" id="status-ind"></div>
+    <span id="status-text">Поиск матрицы...</span>
+    <button class="btn-icon" onclick="openIpModal()" title="Настроить IP">⚙️</button>
+  </div>
+</header>
+
+<div class="container">
+  <!-- Discovery Banner -->
+  <div class="discovery-banner" id="discovery-banner">
+    <div class="banner-content">
+      <span class="banner-title">🔍 Автопоиск матрицы</span>
+      <span class="banner-desc" id="discovery-desc">Ищем плату в локальной сети Wi-Fi...</span>
+      <div class="progress-bar-wrap" id="scan-progress-wrap" style="display:none;">
+        <div class="progress-bar" id="scan-progress"></div>
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button class="btn btn-primary btn-sm" id="btn-scan" onclick="startIpScan()">Найти в сети</button>
+      <button class="btn btn-sm" onclick="promptManualIp()">Указать IP</button>
+    </div>
+  </div>
+
+  <!-- 1. ТАБ: ПАНЕЛЬ УПРАВЛЕНИЯ -->
+  <div id="tab-dash" class="tab-pane active">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Питание и дисплей</span>
+        <button class="btn btn-danger" id="btn-power" onclick="togglePower()">Выключить</button>
+      </div>
+      <div class="control-group">
+        <div class="slider-header">
+          <span>Яркость</span>
+          <span class="slider-val" id="val-bright">32</span>
+        </div>
+        <input type="range" id="slider-bright" min="1" max="255" value="32" oninput="setBrightness(this.value)">
+      </div>
+      <div class="control-group">
+        <div class="slider-header">
+          <span>Скорость эффектов</span>
+          <span class="slider-val" id="val-speed">80</span>
+        </div>
+        <input type="range" id="slider-speed" min="10" max="255" value="80" oninput="setSpeed(this.value)">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Быстрые режимы</span>
+      </div>
+      <div class="btn-grid-3">
+        <button class="btn" onclick="sendCmd('$14 2')">💡 Лампа</button>
+        <button class="btn" onclick="sendCmd('$14 1')">⏰ Часы</button>
+        <button class="btn" onclick="sendCmd('$14 5')">🔥 Камин</button>
+        <button class="btn" onclick="sendCmd('$14 4')">🌙 Ночные</button>
+        <button class="btn" onclick="sendCmd('$16 2')">⏮ Назад</button>
+        <button class="btn" onclick="sendCmd('$16 3')">⏭ Вперед</button>
+      </div>
+      <div class="control-row" style="margin-top:16px;">
+        <span>Автоматическая смена (Autoplay)</span>
+        <button class="btn btn-primary" id="btn-autoplay" onclick="toggleAutoplay()">ВКЛ</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. ТАБ: ВСЕ ЭФФЕКТЫ -->
+  <div id="tab-effects" class="tab-pane">
+    <!-- Фильтры категорий -->
+    <div class="filter-chips">
+      <button class="chip active" onclick="filterEffects('all', this)">Все</button>
+      <button class="chip chip-halloween" onclick="filterEffects('halloween', this)">🎃 Хэллоуин</button>
+      <button class="chip chip-xmas" onclick="filterEffects('xmas', this)">🎄 Новый Год</button>
+      <button class="chip" onclick="filterEffects('classic', this)">🔥 Классика</button>
+      <button class="chip" onclick="filterEffects('noise', this)">🌊 Шумы</button>
+    </div>
+
+    <div class="effects-grid" id="effects-container">
+      <!-- Динамически рендерится из app.js -->
+    </div>
+  </div>
+
+  <!-- 3. ТАБ: БЕГУЩАЯ СТРОКА -->
+  <div id="tab-text" class="tab-pane">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Бегущий текст на матрице</span>
+      </div>
+      <input type="text" id="run-text" placeholder="Введите ваш текст..." maxlength="60">
+      <div class="control-row" style="margin-top:10px;">
+        <span>Цвет и стиль</span>
+        <select id="text-color-preset" style="width:160px; margin-bottom:0;">
+          <option value="0xffffff">Белый</option>
+          <option value="0xff0044">Красный</option>
+          <option value="0x00ff66">Зеленый</option>
+          <option value="0x00ccff">Голубой</option>
+          <option value="0xffcc00">Желтый</option>
+          <option value="0xff7700">Оранжевый</option>
+          <option value="1">🌈 Радужный</option>
+          <option value="2">🎨 Случайный</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="width:100%; margin-top:16px;" onclick="sendRunningText()">Отправить на матрицу</button>
+    </div>
+  </div>
+
+  <!-- 4. ТАБ: ХОЛСТ 16x16 (РИСОВАНИЕ) -->
+  <div id="tab-draw" class="tab-pane">
+    <div class="card canvas-card">
+      <div class="card-header" style="width:100%;">
+        <span class="card-title">Пиксель-арт студия 16x16</span>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-sm" onclick="clearCanvas()">Очистить</button>
+          <button class="btn btn-sm" onclick="fillCanvas()">Залить</button>
+        </div>
+      </div>
+      <div id="matrix-canvas"></div>
+      <div class="palette">
+        <div class="color-dot active" style="background:#ff0044;" onclick="setColor('#ff0044', this)"></div>
+        <div class="color-dot" style="background:#ff7700;" onclick="setColor('#ff7700', this)"></div>
+        <div class="color-dot" style="background:#ffcc00;" onclick="setColor('#ffcc00', this)"></div>
+        <div class="color-dot" style="background:#00ff66;" onclick="setColor('#00ff66', this)"></div>
+        <div class="color-dot" style="background:#00ccff;" onclick="setColor('#00ccff', this)"></div>
+        <div class="color-dot" style="background:#0044ff;" onclick="setColor('#0044ff', this)"></div>
+        <div class="color-dot" style="background:#aa00ff;" onclick="setColor('#aa00ff', this)"></div>
+        <div class="color-dot" style="background:#ffffff;" onclick="setColor('#ffffff', this)"></div>
+        <div class="color-dot" style="background:#000000;" onclick="setColor('#000000', this)"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. ТАБ: ИГРОВОЙ ГЕЙМПАД -->
+  <div id="tab-games" class="tab-pane">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Игры и сенсорный геймпад</span>
+      </div>
+      <div class="btn-grid-3" style="margin-bottom:16px;">
+        <button class="btn" onclick="setMode(21)">🐍 Змейка</button>
+        <button class="btn" onclick="setMode(22)">🧱 Тетрис</button>
+        <button class="btn" onclick="setMode(24)">🏃 Runner</button>
+        <button class="btn" onclick="setMode(25)">🐦 Flappy</button>
+        <button class="btn" onclick="setMode(26)">🏓 Арканоид</button>
+        <button class="btn" onclick="setMode(23)">🌀 Лабиринт</button>
+      </div>
+
+      <div class="dpad">
+        <div></div>
+        <button class="dpad-btn" onclick="sendButton(10)">▲</button>
+        <div></div>
+        <button class="dpad-btn" onclick="sendButton(13)">◀</button>
+        <div></div>
+        <button class="dpad-btn" onclick="sendButton(11)">▶</button>
+        <div></div>
+        <button class="dpad-btn" onclick="sendButton(12)">▼</button>
+        <div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. ТАБ: НАСТРОЙКИ СЕТИ -->
+  <div id="tab-settings" class="tab-pane">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Сетевое подключение платы</span>
+      </div>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">
+        Текущий адрес матрицы: <strong id="cur-host-display" style="color:var(--accent);">http://matrix.local</strong>
+      </p>
+      <input type="text" id="manual-host-input" placeholder="http://192.168.1.100 или http://matrix.local">
+      <button class="btn btn-primary" style="width:100%; margin-bottom:12px;" onclick="saveManualHost()">Сохранить и подключиться</button>
+      <button class="btn" style="width:100%;" onclick="startIpScan()">🔍 Сканировать локальную сеть</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Подсказка по доступу</span>
+      </div>
+      <ul style="font-size:0.85rem; color:var(--text-muted); padding-left:18px; line-height:1.6;">
+        <li>Если плата в домашней сети, в большинстве случаев работает адрес: <code>http://matrix.local</code></li>
+        <li>При первом включении плата создает сеть <code>MatrixAP</code> (192.168.4.1).</li>
+        <li>Для гарантированной работы с Vercel по HTTPS в браузере разрешите запросы к локальной сети (Private Network Access) или используйте адрес платы напрямую.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Нижняя навигация -->
+<nav class="nav-bar">
+  <button class="nav-btn active" onclick="switchTab('dash', this)">
+    <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Главная
+  </button>
+  <button class="nav-btn" onclick="switchTab('effects', this)">
+    <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    Эффекты
+  </button>
+  <button class="nav-btn" onclick="switchTab('text', this)">
+    <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+    Текст
+  </button>
+  <button class="nav-btn" onclick="switchTab('draw', this)">
+    <svg viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+    Рисование
+  </button>
+  <button class="nav-btn" onclick="switchTab('games', this)">
+    <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="6"/><circle cx="8" cy="12" r="2"/><line x1="15" y1="10" x2="15" y2="10"/><line x1="17" y1="12" x2="17" y2="12"/></svg>
+    Игры
+  </button>
+  <button class="nav-btn" onclick="switchTab('settings', this)">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Сеть
+  </button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>
+
