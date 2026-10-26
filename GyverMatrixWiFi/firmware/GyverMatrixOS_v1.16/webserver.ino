@@ -215,6 +215,8 @@ void handleScanWifi() {
   webServer.send(200, "application/json", json);
 }
 
+void saveSettings();
+
 void handleSaveWifi() {
   addCorsHeaders();
   if (webServer.hasArg("ssid")) {
@@ -224,9 +226,12 @@ void handleSaveWifi() {
     setSsid(newSsid);
     setPass(newPass);
     saveStaticIP(0, 0, 0, 0); // DHCP
+    saveSettings();
+    EEPROM.commit();
 
     webServer.send(200, "application/json", "{\"status\":\"saved, restarting\"}");
-    delay(1000);
+    webServer.client().flush();
+    delay(1500);
     ESP.restart();
   } else {
     webServer.send(400, "application/json", "{\"error\":\"missing ssid\"}");

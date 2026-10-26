@@ -596,6 +596,15 @@ void setup() {
   }
 
   loadSettings();
+  if (strlen(ssid) == 0 && strlen(NETWORK_SSID) > 0) {
+    strcpy(ssid, NETWORK_SSID);
+    strcpy(pass, NETWORK_PASS);
+    setSsid(ssid);
+    setPass(pass);
+    saveStaticIP(0, 0, 0, 0);
+    saveSettings();
+    EEPROM.commit();
+  }
 
   // Пинаем генератор случайных чисел
   randomSeed(analogRead(1));
