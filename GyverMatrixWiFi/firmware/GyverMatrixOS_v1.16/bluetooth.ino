@@ -1,6 +1,6 @@
 #define UDP_PACKET_MAX_SIZE 1024
 #define PARSE_AMOUNT 8          // максимальное количество значений в массиве, который хотим получить
-#define header '$'              // стартовый символ
+#define CMD_HEADER '$'              // стартовый символ
 #define divider ' '             // разделительный символ
 #define ending ';'              // завершающий символ
  
@@ -307,6 +307,7 @@ void bluetoothRoutine() {
       // ... и т.д.
     }
 
+#if (USE_DFPLAYER == 1)
     // Есть ли изменение статуса MP3-плеера?
     if (dfPlayer.available()) {
 
@@ -327,6 +328,7 @@ void bluetoothRoutine() {
         if (!isDfPlayerOk) Serial.println(F("MP3 плеер недоступен."));
       }
     }
+#endif
 
     // Проверить - если долгое время не было ручного управления - переключиться в автоматический режим
     if (!(isAlarming || isPlayAlarmSound)) checkIdleState();
@@ -1268,7 +1270,7 @@ void parsing() {
       }
     }
 
-    if (incomingByte == header) {                   // если это $
+    if (incomingByte == CMD_HEADER) {                   // если это $
       parseStarted = true;                          // поднимаем флаг, что можно парсить
       parse_index = 0;                              // сбрасываем индекс
       string_convert = "";                          // очищаем строку
