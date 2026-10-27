@@ -664,3 +664,12 @@ input[type="text"]:focus, select:focus {
   border-color: rgba(255, 51, 102, 0.35);
   background: rgba(255, 51, 102, 0.05);
 }
+
+.chip-new.active {
+  background: #a855f7;
+  border-color: #a855f7;
+  color: #fff;
+}
+
+.effect-card.cat-new { border-color: rgba(168, 85, 247, 0.4); }
+.effect-card.cat-new.active { background: rgba(168, 85, 247, 0.2); color: #c084fc; border-color: #a855f7; }

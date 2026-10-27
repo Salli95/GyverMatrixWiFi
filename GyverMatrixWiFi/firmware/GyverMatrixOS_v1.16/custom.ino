@@ -193,6 +193,26 @@ void customModes(byte aMode) {
     case DEMO_OVERLOOK_CARPET:     overlookCarpetRoutine(); break;
     case DEMO_REDRUM:              redrumRoutine(); break;
     case DEMO_FROZEN_MAZE:         frozenMazeRoutine(); break;
+    case DEMO_THE_RING:            theRingRoutine(); break;
+    case DEMO_STRANGER_THINGS:     strangerThingsRoutine(); break;
+    case DEMO_GHOSTBUSTERS:        ghostbustersRoutine(); break;
+    case DEMO_TWIN_PEAKS:          twinPeaksRoutine(); break;
+    case DEMO_BLADE_RUNNER:        bladeRunnerRoutine(); break;
+    case DEMO_PACMAN:              pacmanRoutine(); break;
+    case DEMO_SPACE_INVADERS:      spaceInvadersRoutine(); break;
+    case DEMO_MARIO_FIRE:          marioFireRoutine(); break;
+    case DEMO_SONIC_RINGS:         sonicRingsRoutine(); break;
+    case DEMO_POKEBALL:            pokeballRoutine(); break;
+    case DEMO_BLACK_HOLE:          blackHoleRoutine(); break;
+    case DEMO_HYPERDRIVE:          hyperdriveRoutine(); break;
+    case DEMO_UFO_BEAM:            ufoBeamRoutine(); break;
+    case DEMO_SOLAR_ECLIPSE:       solarEclipseRoutine(); break;
+    case DEMO_JELLYFISH:           jellyfishRoutine(); break;
+    case DEMO_THUNDERSTORM:        thunderstormRoutine(); break;
+    case DEMO_HOURGLASS:           hourglassRoutine(); break;
+    case DEMO_RAIN_GLASS:          rainGlassRoutine(); break;
+    case DEMO_SPECTRUM_VU:         spectrumVuRoutine(); break;
+    case DEMO_DISCO_BALL:          discoBallRoutine(); break;
 
     // Специальные режимы - доступные только для вызова из эффекта рассвета - dawnProcedure()
     case DEMO_DAWN_ALARM_SPIRAL:   dawnLampSpiral(); break;
@@ -470,6 +490,30 @@ byte mapEffectToMode(byte effect) {
     case EFFECT_FIREWORKS:           tmp_mode = DEMO_FIREWORKS; break;
     case EFFECT_BLIZZARD:            tmp_mode = DEMO_BLIZZARD; break;
     case EFFECT_AURORA:              tmp_mode = DEMO_AURORA; break;          // animation(5);
+    case EFFECT_BLOOD_ELEVATOR:      tmp_mode = DEMO_BLOOD_ELEVATOR; break;
+    case EFFECT_OVERLOOK_CARPET:     tmp_mode = DEMO_OVERLOOK_CARPET; break;
+    case EFFECT_REDRUM:              tmp_mode = DEMO_REDRUM; break;
+    case EFFECT_FROZEN_MAZE:         tmp_mode = DEMO_FROZEN_MAZE; break;
+    case EFFECT_THE_RING:            tmp_mode = DEMO_THE_RING; break;
+    case EFFECT_STRANGER_THINGS:     tmp_mode = DEMO_STRANGER_THINGS; break;
+    case EFFECT_GHOSTBUSTERS:        tmp_mode = DEMO_GHOSTBUSTERS; break;
+    case EFFECT_TWIN_PEAKS:          tmp_mode = DEMO_TWIN_PEAKS; break;
+    case EFFECT_BLADE_RUNNER:        tmp_mode = DEMO_BLADE_RUNNER; break;
+    case EFFECT_PACMAN:              tmp_mode = DEMO_PACMAN; break;
+    case EFFECT_SPACE_INVADERS:      tmp_mode = DEMO_SPACE_INVADERS; break;
+    case EFFECT_MARIO_FIRE:          tmp_mode = DEMO_MARIO_FIRE; break;
+    case EFFECT_SONIC_RINGS:         tmp_mode = DEMO_SONIC_RINGS; break;
+    case EFFECT_POKEBALL:            tmp_mode = DEMO_POKEBALL; break;
+    case EFFECT_BLACK_HOLE:          tmp_mode = DEMO_BLACK_HOLE; break;
+    case EFFECT_HYPERDRIVE:          tmp_mode = DEMO_HYPERDRIVE; break;
+    case EFFECT_UFO_BEAM:            tmp_mode = DEMO_UFO_BEAM; break;
+    case EFFECT_SOLAR_ECLIPSE:       tmp_mode = DEMO_SOLAR_ECLIPSE; break;
+    case EFFECT_JELLYFISH:           tmp_mode = DEMO_JELLYFISH; break;
+    case EFFECT_THUNDERSTORM:        tmp_mode = DEMO_THUNDERSTORM; break;
+    case EFFECT_HOURGLASS:           tmp_mode = DEMO_HOURGLASS; break;
+    case EFFECT_RAIN_GLASS:          tmp_mode = DEMO_RAIN_GLASS; break;
+    case EFFECT_SPECTRUM_VU:         tmp_mode = DEMO_SPECTRUM_VU; break;
+    case EFFECT_DISCO_BALL:          tmp_mode = DEMO_DISCO_BALL; break;
     
     // Нет соответствия - выполняются для текущего режима thisMode
     case EFFECT_BREATH:              // Дыхание
@@ -593,6 +637,26 @@ byte mapModeToEffect(byte aMode) {
     case DEMO_OVERLOOK_CARPET:      tmp_effect = EFFECT_OVERLOOK_CARPET; break;
     case DEMO_REDRUM:               tmp_effect = EFFECT_REDRUM; break;
     case DEMO_FROZEN_MAZE:          tmp_effect = EFFECT_FROZEN_MAZE; break;
+    case DEMO_THE_RING:             tmp_effect = EFFECT_THE_RING; break;
+    case DEMO_STRANGER_THINGS:      tmp_effect = EFFECT_STRANGER_THINGS; break;
+    case DEMO_GHOSTBUSTERS:         tmp_effect = EFFECT_GHOSTBUSTERS; break;
+    case DEMO_TWIN_PEAKS:           tmp_effect = EFFECT_TWIN_PEAKS; break;
+    case DEMO_BLADE_RUNNER:         tmp_effect = EFFECT_BLADE_RUNNER; break;
+    case DEMO_PACMAN:               tmp_effect = EFFECT_PACMAN; break;
+    case DEMO_SPACE_INVADERS:       tmp_effect = EFFECT_SPACE_INVADERS; break;
+    case DEMO_MARIO_FIRE:           tmp_effect = EFFECT_MARIO_FIRE; break;
+    case DEMO_SONIC_RINGS:          tmp_effect = EFFECT_SONIC_RINGS; break;
+    case DEMO_POKEBALL:             tmp_effect = EFFECT_POKEBALL; break;
+    case DEMO_BLACK_HOLE:           tmp_effect = EFFECT_BLACK_HOLE; break;
+    case DEMO_HYPERDRIVE:           tmp_effect = EFFECT_HYPERDRIVE; break;
+    case DEMO_UFO_BEAM:             tmp_effect = EFFECT_UFO_BEAM; break;
+    case DEMO_SOLAR_ECLIPSE:        tmp_effect = EFFECT_SOLAR_ECLIPSE; break;
+    case DEMO_JELLYFISH:            tmp_effect = EFFECT_JELLYFISH; break;
+    case DEMO_THUNDERSTORM:         tmp_effect = EFFECT_THUNDERSTORM; break;
+    case DEMO_HOURGLASS:            tmp_effect = EFFECT_HOURGLASS; break;
+    case DEMO_RAIN_GLASS:           tmp_effect = EFFECT_RAIN_GLASS; break;
+    case DEMO_SPECTRUM_VU:          tmp_effect = EFFECT_SPECTRUM_VU; break;
+    case DEMO_DISCO_BALL:           tmp_effect = EFFECT_DISCO_BALL; break;
 
     case DEMO_TEXT_0 :  break;      // Бегущий текст
     case DEMO_TEXT_1 :  break;      // Бегущий текст

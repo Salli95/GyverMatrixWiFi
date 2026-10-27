@@ -27,6 +27,28 @@ let speedTimeout = null;
 
 // Каталог эффектов с ID прошивки GyverMatrixOS v1.16
 const ALL_EFFECTS = [
+  // Новинки (New effects)
+  { id: 50, name: '📺 Звонок', cat: 'new' },
+  { id: 51, name: '🌌 ОСД / Изнанка', cat: 'new' },
+  { id: 52, name: '🚫 Охотники', cat: 'new' },
+  { id: 53, name: '☕️ Твин Пикс', cat: 'new' },
+  { id: 54, name: '🏙 Бегущий лезвие', cat: 'new' },
+  { id: 55, name: '🟡 Пакман', cat: 'new' },
+  { id: 56, name: '👾 Захватчики', cat: 'new' },
+  { id: 57, name: '🍄 Марио Огонь', cat: 'new' },
+  { id: 58, name: '🌀 Соник Кольца', cat: 'new' },
+  { id: 59, name: '⚡️ Покебол', cat: 'new' },
+  { id: 60, name: '🕳 Черная дыра', cat: 'new' },
+  { id: 61, name: '✨ Гиперпространство', cat: 'new' },
+  { id: 62, name: '🛸 Луч НЛО', cat: 'new' },
+  { id: 63, name: '🌑 Солнечное затмение', cat: 'new' },
+  { id: 64, name: '🪼 Неоновые медузы', cat: 'new' },
+  { id: 65, name: '⚡️ Гроза и молнии', cat: 'new' },
+  { id: 66, name: '⏳ Песочные часы', cat: 'new' },
+  { id: 67, name: '💧 Капли на стекле', cat: 'new' },
+  { id: 68, name: '📊 Эквалайзер', cat: 'new' },
+  { id: 69, name: '🪩 Диско-шар', cat: 'new' },
+
   // Хэллоуин и «Сияние»
   { id: 35, name: '🎃 Тыква Джек', cat: 'halloween' },
   { id: 46, name: '🩸 Кровавый лифт', cat: 'halloween' },

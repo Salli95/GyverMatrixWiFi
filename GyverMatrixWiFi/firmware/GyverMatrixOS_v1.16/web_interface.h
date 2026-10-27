@@ -136,6 +136,7 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22p
       <div class="card-title">Каталог эффектов</div>
       <div class="categories">
         <button class="cat-chip active" onclick="filterEff('all', this)">Все</button>
+        <button class="cat-chip" onclick="filterEff('new', this)">✨ Новинки</button>
         <button class="cat-chip" onclick="filterEff('halloween', this)">🎃 Хэллоуин / Сияние</button>
         <button class="cat-chip" onclick="filterEff('xmas', this)">🎄 Новый Год</button>
         <button class="cat-chip" onclick="filterEff('classic', this)">🔥 Классика</button>
@@ -231,6 +232,26 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22p
 
 <script>
 const EFFECTS = [
+  { id: 50, name: '📺 Звонок', cat: 'new' },
+  { id: 51, name: '🌌 ОСД / Изнанка', cat: 'new' },
+  { id: 52, name: '🚫 Охотники', cat: 'new' },
+  { id: 53, name: '☕️ Твин Пикс', cat: 'new' },
+  { id: 54, name: '🏙 Бегущий', cat: 'new' },
+  { id: 55, name: '🟡 Пакман', cat: 'new' },
+  { id: 56, name: '👾 Захватчики', cat: 'new' },
+  { id: 57, name: '🍄 Марио', cat: 'new' },
+  { id: 58, name: '🌀 Соник', cat: 'new' },
+  { id: 59, name: '⚡️ Покебол', cat: 'new' },
+  { id: 60, name: '🕳 Черная дыра', cat: 'new' },
+  { id: 61, name: '✨ Гиперпрыжок', cat: 'new' },
+  { id: 62, name: '🛸 Луч НЛО', cat: 'new' },
+  { id: 63, name: '🌑 Затмение', cat: 'new' },
+  { id: 64, name: '🪼 Медузы', cat: 'new' },
+  { id: 65, name: '⚡️ Гроза', cat: 'new' },
+  { id: 66, name: '⏳ Песочные часы', cat: 'new' },
+  { id: 67, name: '💧 Капли дождя', cat: 'new' },
+  { id: 68, name: '📊 Эквалайзер', cat: 'new' },
+  { id: 69, name: '🪩 Диско-шар', cat: 'new' },
   { id: 35, name: '🎃 Тыква Джек', cat: 'halloween' },
   { id: 46, name: '🩸 Кровавый лифт', cat: 'halloween' },
   { id: 47, name: '🔶 Ковер Оверлук', cat: 'halloween' },

@@ -214,10 +214,30 @@ byte COLOR_MODE = 0;
 #define DEMO_OVERLOOK_CARPET    47
 #define DEMO_REDRUM             48
 #define DEMO_FROZEN_MAZE        49
+#define DEMO_THE_RING           50
+#define DEMO_STRANGER_THINGS    51
+#define DEMO_GHOSTBUSTERS       52
+#define DEMO_TWIN_PEAKS         53
+#define DEMO_BLADE_RUNNER       54
+#define DEMO_PACMAN             55
+#define DEMO_SPACE_INVADERS     56
+#define DEMO_MARIO_FIRE         57
+#define DEMO_SONIC_RINGS        58
+#define DEMO_POKEBALL           59
+#define DEMO_BLACK_HOLE         60
+#define DEMO_HYPERDRIVE         61
+#define DEMO_UFO_BEAM           62
+#define DEMO_SOLAR_ECLIPSE      63
+#define DEMO_JELLYFISH          64
+#define DEMO_THUNDERSTORM       65
+#define DEMO_HOURGLASS          66
+#define DEMO_RAIN_GLASS         67
+#define DEMO_SPECTRUM_VU        68
+#define DEMO_DISCO_BALL         69
 
 // не забудьте указать количество режимов для корректного переключения с последнего на первый
 // количество кастомных режимов (которые переключаются сами или кнопкой)
-#define MODES_AMOUNT 50
+#define MODES_AMOUNT 70
 
 // ---------------------------------
 #define DEMO_DAWN_ALARM_SPIRAL 253  // Специальный режим, вызывается из DEMO_DAWN_ALARM для ламп на круговой матрице - огонек по спирали
@@ -269,8 +289,28 @@ byte COLOR_MODE = 0;
 #define EFFECT_OVERLOOK_CARPET     41
 #define EFFECT_REDRUM              42
 #define EFFECT_FROZEN_MAZE         43
+#define EFFECT_THE_RING            44
+#define EFFECT_STRANGER_THINGS     45
+#define EFFECT_GHOSTBUSTERS        46
+#define EFFECT_TWIN_PEAKS          47
+#define EFFECT_BLADE_RUNNER        48
+#define EFFECT_PACMAN              49
+#define EFFECT_SPACE_INVADERS      50
+#define EFFECT_MARIO_FIRE          51
+#define EFFECT_SONIC_RINGS         52
+#define EFFECT_POKEBALL            53
+#define EFFECT_BLACK_HOLE          54
+#define EFFECT_HYPERDRIVE          55
+#define EFFECT_UFO_BEAM            56
+#define EFFECT_SOLAR_ECLIPSE       57
+#define EFFECT_JELLYFISH           58
+#define EFFECT_THUNDERSTORM        59
+#define EFFECT_HOURGLASS           60
+#define EFFECT_RAIN_GLASS          61
+#define EFFECT_SPECTRUM_VU         62
+#define EFFECT_DISCO_BALL          63
 
-#define MAX_EFFECT                 44
+#define MAX_EFFECT                 64
 
 // Сквозная нумерация (ID) игр в группе игр
 #define GAME_SNAKE                  0
@@ -574,6 +614,26 @@ void bloodElevatorRoutine();
 void overlookCarpetRoutine();
 void redrumRoutine();
 void frozenMazeRoutine();
+void theRingRoutine();
+void strangerThingsRoutine();
+void ghostbustersRoutine();
+void twinPeaksRoutine();
+void bladeRunnerRoutine();
+void pacmanRoutine();
+void spaceInvadersRoutine();
+void marioFireRoutine();
+void sonicRingsRoutine();
+void pokeballRoutine();
+void blackHoleRoutine();
+void hyperdriveRoutine();
+void ufoBeamRoutine();
+void solarEclipseRoutine();
+void jellyfishRoutine();
+void thunderstormRoutine();
+void hourglassRoutine();
+void rainGlassRoutine();
+void spectrumVuRoutine();
+void discoBallRoutine();
 
 void setup() {
 
