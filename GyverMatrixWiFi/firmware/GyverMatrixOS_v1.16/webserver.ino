@@ -215,8 +215,6 @@ void handleScanWifi() {
   webServer.send(200, "application/json", json);
 }
 
-void saveSettings();
-
 void handleSaveWifi() {
   addCorsHeaders();
   if (webServer.hasArg("ssid")) {

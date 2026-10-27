@@ -536,6 +536,12 @@ String cmd96 = "";                 // Строка, формируемая sendP
 void initWebServer();
 void startCaptivePortal();
 void webServerRoutine();
+void saveSettings();
+void loadSettings();
+void saveDefaults();
+void setSsid(String Ssid);
+void setPass(String Pass);
+void saveStaticIP(byte p1, byte p2, byte p3, byte p4);
 void pumpkinRoutine();
 void ghostsRoutine();
 void spookyEyesRoutine();
