@@ -442,7 +442,7 @@ timerMinim idleTimer(idleTime);                         // Таймер безд
 timerMinim alarmSoundTimer(4294967295);                 // Таймер выключения звука будильника
 timerMinim fadeSoundTimer(4294967295);                  // Таймер плавного включения / выключения звука
 timerMinim autoBrightnessTimer(500);                    // Таймер отслеживания показаний датчика света при включенной авторегулировки яркости матрицы
-timerMinim saveSettingsTimer(30000);                    // Таймер отложенного сохранения настроек
+timerMinim saveSettingsTimer(5000);                    // Таймер отложенного сохранения настроек
 timerMinim ntpSyncTimer(1000 * 60 * SYNC_TIME_PERIOD);  // Таймер синхронизации времени с NTP-сервером
 timerMinim dawnTimer(4294967295);                       // Таймер шага рассвета для будильника "рассвет"
 

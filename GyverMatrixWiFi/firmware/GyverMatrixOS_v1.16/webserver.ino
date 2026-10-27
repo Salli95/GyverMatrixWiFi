@@ -79,9 +79,8 @@ void handleBrightness() {
     breathBrightness = b;
     if (specialMode) specialBrightness = b;
     FastLED.setBrightness(b);
-    FastLED.show();
     saveMaxBrightness(globalBrightness);
-    saveSettings();
+    saveSettingsTimer.reset();
   }
   webServer.send(200, "application/json", "{\"status\":\"ok\"}");
 }
@@ -95,8 +94,8 @@ void handleSpeed() {
     byte eff = mapModeToEffect(thisMode);
     if (eff != 255) {
       saveEffectSpeed(eff, s);
-      saveSettings();
     }
+    saveSettingsTimer.reset();
   }
   webServer.send(200, "application/json", "{\"status\":\"ok\"}");
 }

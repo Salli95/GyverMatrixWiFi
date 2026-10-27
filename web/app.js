@@ -64,8 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
   updateHostDisplay();
   checkConnection();
 
-  // Фоновый опрос статуса каждые 3 секунды
-  setInterval(checkConnection, 3000);
+  // Фоновый опрос статуса каждые 4 секунды
+  setInterval(checkConnection, 4000);
 });
 
 function updateHostDisplay() {
@@ -126,8 +126,10 @@ async function sendCmd(cmd) {
   return await sendApi('/api/cmd', { cmd: cmd });
 }
 
+let isChecking = false;
 async function checkConnection() {
-  if (isScanning) return;
+  if (isScanning || isChecking) return;
+  isChecking = true;
   try {
     const base = matrixHost.endsWith('/') ? matrixHost.slice(0, -1) : matrixHost;
     const res = await fetchWithTimeout(`${base}/api/state`, { method: 'GET' }, 2000);
@@ -155,6 +157,8 @@ async function checkConnection() {
     }
     setConnected(false);
     return false;
+  } finally {
+    isChecking = false;
   }
 }
 

@@ -863,7 +863,7 @@ void setLastMode(byte mode) {
   if (mode < MODES_AMOUNT && mode != EEPROMread(154)) {
     EEPROMwrite(154, mode);
     eepromModified = true;
-    saveSettings();
+    saveSettingsTimer.reset();
   }
 }
 
