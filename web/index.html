@@ -53,9 +53,13 @@
       <div class="control-group">
         <div class="slider-header">
           <span>Скорость эффектов</span>
-          <span class="slider-val" id="val-speed">80</span>
+          <span class="slider-val" id="val-speed">50%</span>
         </div>
-        <input type="range" id="slider-speed" min="10" max="255" value="80" oninput="setSpeed(this.value)">
+        <input type="range" id="slider-speed" min="1" max="100" value="50" oninput="setSpeed(this.value)">
+        <div class="slider-labels">
+          <span>0% (Медленно)</span>
+          <span>100% (Быстро)</span>
+        </div>
       </div>
     </div>
 
@@ -64,12 +68,12 @@
         <span class="card-title">Быстрые режимы</span>
       </div>
       <div class="btn-grid-3">
-        <button class="btn" onclick="sendCmd('$14 2')">💡 Лампа</button>
-        <button class="btn" onclick="sendCmd('$14 1')">⏰ Часы</button>
-        <button class="btn" onclick="sendCmd('$14 5')">🔥 Камин</button>
-        <button class="btn" onclick="sendCmd('$14 4')">🌙 Ночные</button>
-        <button class="btn" onclick="sendCmd('$16 2')">⏮ Назад</button>
-        <button class="btn" onclick="sendCmd('$16 3')">⏭ Вперед</button>
+        <button class="btn btn-preset" id="preset-lamp" onclick="sendSpecial(2)">💡 Лампа</button>
+        <button class="btn btn-preset" id="preset-clock" onclick="sendSpecial(1)">⏰ Часы</button>
+        <button class="btn btn-preset" id="preset-fire" onclick="sendSpecial(5)">🔥 Камин</button>
+        <button class="btn btn-preset" id="preset-night" onclick="sendSpecial(4)">🌙 Ночные</button>
+        <button class="btn" onclick="stepMode('prev')">⏮ Назад</button>
+        <button class="btn" onclick="stepMode('next')">⏭ Вперед</button>
       </div>
       <div class="control-row" style="margin-top:16px;">
         <span>Автоматическая смена (Autoplay)</span>
@@ -80,7 +84,6 @@
 
   <!-- 2. ТАБ: ВСЕ ЭФФЕКТЫ -->
   <div id="tab-effects" class="tab-pane">
-    <!-- Фильтры категорий -->
     <div class="filter-chips">
       <button class="chip active" onclick="filterEffects('all', this)">Все</button>
       <button class="chip chip-halloween" onclick="filterEffects('halloween', this)">🎃 Хэллоуин</button>
@@ -101,72 +104,98 @@
         <span class="card-title">Бегущий текст на матрице</span>
       </div>
       <input type="text" id="run-text" placeholder="Введите ваш текст..." maxlength="60">
-      <div class="control-row" style="margin-top:10px;">
-        <span>Цвет и стиль</span>
-        <select id="text-color-preset" style="width:160px; margin-bottom:0;">
-          <option value="0xffffff">Белый</option>
-          <option value="0xff0044">Красный</option>
-          <option value="0x00ff66">Зеленый</option>
-          <option value="0x00ccff">Голубой</option>
-          <option value="0xffcc00">Желтый</option>
-          <option value="0xff7700">Оранжевый</option>
-          <option value="1">🌈 Радужный</option>
-          <option value="2">🎨 Случайный</option>
-        </select>
+
+      <div class="text-color-selection">
+        <label class="control-label">Выбор цвета текста (Любой градиент)</label>
+        <div class="color-picker-row">
+          <div class="color-input-wrap">
+            <input type="color" id="text-color-picker" value="#00ff66" oninput="onTextColorInput(this.value)">
+            <span id="text-color-hex">#00FF66</span>
+          </div>
+          <div id="text-preview-strip" class="text-preview-strip">
+            <span id="text-preview-sample" style="color:#00ff66;">Пример текста</span>
+          </div>
+        </div>
+
+        <div class="text-mode-chips">
+          <button type="button" class="mode-chip" id="chip-rainbow" onclick="setTextMode('rainbow', this)">🌈 Радужный</button>
+          <button type="button" class="mode-chip" id="chip-random" onclick="setTextMode('random', this)">🎨 Случайный</button>
+          <button type="button" class="mode-chip active" id="chip-color" onclick="setTextMode('color', this, '#00ff66')">🟢 Неон</button>
+          <button type="button" class="mode-chip" onclick="setTextMode('color', this, '#ff0044')">🔴 Красный</button>
+          <button type="button" class="mode-chip" onclick="setTextMode('color', this, '#00ccff')">🔵 Голубой</button>
+          <button type="button" class="mode-chip" onclick="setTextMode('color', this, '#ffcc00')">🟡 Желтый</button>
+          <button type="button" class="mode-chip" onclick="setTextMode('color', this, '#aa00ff')">🟣 Фиолетовый</button>
+          <button type="button" class="mode-chip" onclick="setTextMode('color', this, '#ffffff')">⚪ Белый</button>
+        </div>
       </div>
+
       <button class="btn btn-primary" style="width:100%; margin-top:16px;" onclick="sendRunningText()">Отправить на матрицу</button>
     </div>
   </div>
 
-  <!-- 4. ТАБ: ХОЛСТ 16x16 (РИСОВАНИЕ) -->
+  <!-- 4. ТАБ: ХОЛСТ 15x16 (РИСОВАНИЕ) -->
   <div id="tab-draw" class="tab-pane">
     <div class="card canvas-card">
       <div class="card-header" style="width:100%;">
-        <span class="card-title">Пиксель-арт студия 16x16</span>
+        <span class="card-title">Пиксель-арт студия (15x16)</span>
         <div style="display:flex; gap:6px;">
           <button class="btn btn-sm" onclick="clearCanvas()">Очистить</button>
           <button class="btn btn-sm" onclick="fillCanvas()">Залить</button>
         </div>
       </div>
       <div id="matrix-canvas"></div>
-      <div class="palette">
-        <div class="color-dot active" style="background:#ff0044;" onclick="setColor('#ff0044', this)"></div>
-        <div class="color-dot" style="background:#ff7700;" onclick="setColor('#ff7700', this)"></div>
-        <div class="color-dot" style="background:#ffcc00;" onclick="setColor('#ffcc00', this)"></div>
-        <div class="color-dot" style="background:#00ff66;" onclick="setColor('#00ff66', this)"></div>
-        <div class="color-dot" style="background:#00ccff;" onclick="setColor('#00ccff', this)"></div>
-        <div class="color-dot" style="background:#0044ff;" onclick="setColor('#0044ff', this)"></div>
-        <div class="color-dot" style="background:#aa00ff;" onclick="setColor('#aa00ff', this)"></div>
-        <div class="color-dot" style="background:#ffffff;" onclick="setColor('#ffffff', this)"></div>
-        <div class="color-dot" style="background:#000000;" onclick="setColor('#000000', this)"></div>
+      
+      <div class="palette-tools">
+        <div class="palette">
+          <div class="color-dot active" style="background:#ff0044;" onclick="setColor('#ff0044', this)"></div>
+          <div class="color-dot" style="background:#ff7700;" onclick="setColor('#ff7700', this)"></div>
+          <div class="color-dot" style="background:#ffcc00;" onclick="setColor('#ffcc00', this)"></div>
+          <div class="color-dot" style="background:#00ff66;" onclick="setColor('#00ff66', this)"></div>
+          <div class="color-dot" style="background:#00ccff;" onclick="setColor('#00ccff', this)"></div>
+          <div class="color-dot" style="background:#0044ff;" onclick="setColor('#0044ff', this)"></div>
+          <div class="color-dot" style="background:#aa00ff;" onclick="setColor('#aa00ff', this)"></div>
+          <div class="color-dot" style="background:#ffffff;" onclick="setColor('#ffffff', this)"></div>
+          <div class="color-dot" style="background:#000000;" onclick="setColor('#000000', this)"></div>
+        </div>
+        <div class="custom-color-wrap">
+          <span>Градиент:</span>
+          <input type="color" id="custom-draw-color" value="#ff0044" oninput="setCustomDrawColor(this.value)">
+          <span id="custom-draw-hex" style="font-size:0.8rem; color:var(--text-muted);">#FF0044</span>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- 5. ТАБ: ИГРОВОЙ ГЕЙМПАД -->
+  <!-- 5. ТАБ: ИГРЫ И ГЕЙМПАД -->
   <div id="tab-games" class="tab-pane">
     <div class="card">
       <div class="card-header">
         <span class="card-title">Игры и сенсорный геймпад</span>
       </div>
-      <div class="btn-grid-3" style="margin-bottom:16px;">
-        <button class="btn" onclick="setMode(21)">🐍 Змейка</button>
-        <button class="btn" onclick="setMode(22)">🧱 Тетрис</button>
-        <button class="btn" onclick="setMode(24)">🏃 Runner</button>
-        <button class="btn" onclick="setMode(25)">🐦 Flappy</button>
-        <button class="btn" onclick="setMode(26)">🏓 Арканоид</button>
-        <button class="btn" onclick="setMode(23)">🌀 Лабиринт</button>
+
+      <div class="game-control-header">
+        <button id="btn-game-demo" class="btn btn-primary" style="width:100%; margin-bottom:8px; font-weight:700;" onclick="toggleGameDemo()">🤖 Авто-режим игры: ВКЛ (Бот играет сам)</button>
+        <div class="game-status-hint" id="game-mode-hint">Бот играет сам на фоне. Нажмите любую стрелку геймпада для ручного управления.</div>
+      </div>
+
+      <div class="btn-grid-3" style="margin-top:14px; margin-bottom:16px;">
+        <button class="btn btn-game" data-game="0" onclick="startSelectedGame(0, 21)">🐍 Змейка</button>
+        <button class="btn btn-game" data-game="1" onclick="startSelectedGame(1, 22)">🧱 Тетрис</button>
+        <button class="btn btn-game" data-game="3" onclick="startSelectedGame(3, 24)">🏃 Runner</button>
+        <button class="btn btn-game" data-game="4" onclick="startSelectedGame(4, 25)">🐦 Flappy</button>
+        <button class="btn btn-game" data-game="5" onclick="startSelectedGame(5, 26)">🏓 Арканоид</button>
+        <button class="btn btn-game" data-game="2" onclick="startSelectedGame(2, 23)">🌀 Лабиринт</button>
       </div>
 
       <div class="dpad">
         <div></div>
-        <button class="dpad-btn" onclick="sendButton(10)">▲</button>
+        <button class="dpad-btn" onclick="sendGameDpad(0)">▲</button>
         <div></div>
-        <button class="dpad-btn" onclick="sendButton(13)">◀</button>
+        <button class="dpad-btn" onclick="sendGameDpad(3)">◀</button>
         <div></div>
-        <button class="dpad-btn" onclick="sendButton(11)">▶</button>
+        <button class="dpad-btn" onclick="sendGameDpad(1)">▶</button>
         <div></div>
-        <button class="dpad-btn" onclick="sendButton(12)">▼</button>
+        <button class="dpad-btn" onclick="sendGameDpad(2)">▼</button>
         <div></div>
       </div>
     </div>
@@ -179,11 +208,22 @@
         <span class="card-title">Сетевое подключение платы</span>
       </div>
       <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">
-        Текущий адрес матрицы: <strong id="cur-host-display" style="color:var(--accent);">http://matrix.local</strong>
+        Текущий адрес матрицы: <strong id="cur-host-display" style="color:var(--accent);">http://192.168.0.103</strong>
       </p>
-      <input type="text" id="manual-host-input" placeholder="http://192.168.1.100 или http://matrix.local">
+      <input type="text" id="manual-host-input" placeholder="http://192.168.0.103 или http://matrix.local">
       <button class="btn btn-primary" style="width:100%; margin-bottom:12px;" onclick="saveManualHost()">Сохранить и подключиться</button>
       <button class="btn" style="width:100%;" onclick="startIpScan()">🔍 Сканировать локальную сеть</button>
+    </div>
+
+    <!-- Зона сброса Wi-Fi -->
+    <div class="card card-danger-zone">
+      <div class="card-header">
+        <span class="card-title" style="color:var(--danger);">⚠️ Сброс и отвязка сети</span>
+      </div>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:14px; line-height:1.5;">
+        Если нужно перенести матрицу на другой роутер или раздать Wi-Fi со смартфона, нажмите «Забыть сеть». Плата сотрет сохраненную сеть из памяти, перезагрузится и запустит точку доступа <strong>MatrixAP</strong> (IP: <code>192.168.4.1</code>).
+      </p>
+      <button class="btn btn-danger" style="width:100%; font-weight:700;" onclick="forgetMatrixWifi()">🗑 Забыть Wi-Fi сеть</button>
     </div>
 
     <div class="card">
@@ -191,9 +231,8 @@
         <span class="card-title">Подсказка по доступу</span>
       </div>
       <ul style="font-size:0.85rem; color:var(--text-muted); padding-left:18px; line-height:1.6;">
-        <li>Если плата в домашней сети, в большинстве случаев работает адрес: <code>http://matrix.local</code></li>
-        <li>При первом включении плата создает сеть <code>MatrixAP</code> (192.168.4.1).</li>
-        <li>Для гарантированной работы с Vercel по HTTPS в браузере разрешите запросы к локальной сети (Private Network Access) или используйте адрес платы напрямую.</li>
+        <li>Если в браузере (например Opera GX) включен VPN, локальные запросы к 192.168.0.x могут блокироваться. Работа через <code>http://localhost:3000</code> имеет встроенный прокси и не блокируется.</li>
+        <li>При сбросе сети подключитесь к Wi-Fi <code>MatrixAP</code> (пароль <code>12341234</code>) и откройте <code>http://192.168.4.1</code>.</li>
       </ul>
     </div>
   </div>
@@ -230,4 +269,3 @@
 <script src="app.js"></script>
 </body>
 </html>
-

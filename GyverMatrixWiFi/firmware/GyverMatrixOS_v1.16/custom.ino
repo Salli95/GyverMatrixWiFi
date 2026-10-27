@@ -202,7 +202,7 @@ void customModes(byte aMode) {
 
 // ********************* ОСНОВНОЙ ЦИКЛ РЕЖИМОВ *******************
 
-static void nextMode() {
+void nextMode() {
 #if (SMOOTH_CHANGE == 1)
   fadeMode = 0;
   modeDir = true;
@@ -211,7 +211,7 @@ static void nextMode() {
 #endif
 }
 
-static void prevMode() {
+void prevMode() {
 #if (SMOOTH_CHANGE == 1)
   fadeMode = 0;
   modeDir = false;

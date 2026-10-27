@@ -37,6 +37,8 @@ input:focus, select:focus { border-color: var(--accent); }
 .btn-sec { background: transparent; color: var(--accent); border: 1px solid var(--accent); margin-top: 10px; text-decoration: none; display: block; text-align: center; }
 .info { font-size: 0.8rem; color: var(--text-dim); line-height: 1.5; margin-top: 18px; text-align: center; border-top: 1px solid var(--border); padding-top: 14px; }
 .info strong { color: var(--accent); }
+.btn-forget { background: transparent; border: 1px solid #ff3366; color: #ff3366; margin-top: 10px; font-size: 0.85rem; padding: 10px; }
+.btn-forget:hover { background: rgba(255,51,102,0.15); }
 </style>
 </head>
 <body>
@@ -63,6 +65,7 @@ input:focus, select:focus { border-color: var(--accent); }
 
     <button type="submit" class="btn" id="btn-save">Подключить к Wi-Fi</button>
   </form>
+  <button type="button" class="btn btn-forget" onclick="forgetWifi()">Забыть сеть и сбросить Wi-Fi</button>
 
   <div class="info">
     IP матрица: <strong id="ip-val">...</strong><br>
@@ -138,6 +141,14 @@ async function saveWifi(e) {
   } catch (err) {
     alert('Настройки отправлены! Плата перезагружается...');
   }
+}
+
+async function forgetWifi() {
+  if (!confirm('Забыть сохраненную сеть Wi-Fi? Плата перейдет в режим точки доступа MatrixAP (192.168.4.1) и перезагрузится.')) return;
+  try {
+    await fetch('/api/forget_wifi', { method: 'POST' });
+  } catch (e) {}
+  alert('Сеть удалена. Плата перезагружается в режиме MatrixAP (пароль 12341234)');
 }
 </script>
 </body>

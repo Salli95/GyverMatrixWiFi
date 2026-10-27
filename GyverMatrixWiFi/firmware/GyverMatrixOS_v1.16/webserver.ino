@@ -8,7 +8,7 @@
 #endif
 
 // ==============================================================================
-// Web Server & Captive Portal для GyverMatrix
+// Web Server & Captive Portal для GyverMatrix (Pro Edition)
 // ==============================================================================
 
 ESP8266WebServer webServer(80);
@@ -37,6 +37,10 @@ void handleGetState() {
   json += "\"speed\":" + String(effectSpeed) + ",";
   json += "\"autoplay\":" + String(AUTOPLAY ? "true" : "false") + ",";
   json += "\"autoplayTime\":" + String(autoplayTime) + ",";
+  json += "\"gamemode\":" + String(gamemodeFlag ? "true" : "false") + ",";
+  json += "\"gameDemo\":" + String(gameDemo ? "true" : "false") + ",";
+  json += "\"specialMode\":" + String(specialMode ? "true" : "false") + ",";
+  json += "\"specialModeId\":" + String(specialModeId) + ",";
   json += "\"ip\":\"" + (wifi_connected ? WiFi.localIP().toString() : WiFi.softAPIP().toString()) + "\",";
   json += "\"apMode\":" + String(!wifi_connected ? "true" : "false");
   json += "}";
@@ -47,15 +51,132 @@ void handleCmd() {
   addCorsHeaders();
   if (webServer.hasArg("cmd")) {
     String cmd = webServer.arg("cmd");
-    // Отправляем команду в буфер incomeBuffer и парсим ее
-    cmd.toCharArray(incomeBuffer, UDP_PACKET_MAX_SIZE);
-    recievedFlag = true;
-    bufIdx = cmd.length();
-    parsing();
+    cmd.trim();
+    if (cmd.startsWith("$")) cmd = cmd.substring(1);
+
+    // Прямой надежный парсер команд
+    int sp1 = cmd.indexOf(' ');
+    int cmdNum = (sp1 > 0) ? cmd.substring(0, sp1).toInt() : cmd.toInt();
+    int arg1 = 0, arg2 = 0;
+    if (sp1 > 0) {
+      String rest = cmd.substring(sp1 + 1);
+      rest.trim();
+      int sp2 = rest.indexOf(' ');
+      if (sp2 > 0) {
+        arg1 = rest.substring(0, sp2).toInt();
+        arg2 = rest.substring(sp2 + 1).toInt();
+      } else {
+        arg1 = rest.toInt();
+      }
+    }
+
+    switch (cmdNum) {
+      case 10: // D-pad Up
+        BTcontrol = true; buttons = 0; controlFlag = true; gamePaused = false; gameDemo = false;
+        break;
+      case 11: // D-pad Right
+        BTcontrol = true; buttons = 1; controlFlag = true; gamePaused = false; gameDemo = false;
+        break;
+      case 12: // D-pad Down
+        BTcontrol = true; buttons = 2; controlFlag = true; gamePaused = false; gameDemo = false;
+        break;
+      case 13: // D-pad Left
+        BTcontrol = true; buttons = 3; controlFlag = true; gamePaused = false; gameDemo = false;
+        break;
+      case 14: // Special mode (лампа, часы, камин, ночные)
+        setSpecialMode(arg1);
+        break;
+      case 16: // Autoplay / Next / Prev
+        if (arg1 == 0) { AUTOPLAY = true; gameDemo = true; }
+        else if (arg1 == 1) { AUTOPLAY = false; }
+        else if (arg1 == 2) { prevMode(); }
+        else if (arg1 == 3) { nextMode(); }
+        else if (arg1 == 4) { AUTOPLAY = (arg2 == 1); }
+        saveAutoplay(AUTOPLAY);
+        break;
+      default:
+        intData[0] = cmdNum;
+        intData[1] = arg1;
+        intData[2] = arg2;
+        recievedFlag = true;
+        parsing();
+        break;
+    }
     webServer.send(200, "application/json", "{\"status\":\"ok\"}");
   } else {
     webServer.send(400, "application/json", "{\"error\":\"missing cmd\"}");
   }
+}
+
+void handleSpecial() {
+  addCorsHeaders();
+  if (webServer.hasArg("id")) {
+    int id = webServer.arg("id").toInt();
+    setSpecialMode(id);
+  }
+  webServer.send(200, "application/json", "{\"status\":\"ok\"}");
+}
+
+void handleStep() {
+  addCorsHeaders();
+  String dir = webServer.arg("dir");
+  if (dir == "next") nextMode();
+  else if (dir == "prev") prevMode();
+  webServer.send(200, "application/json", "{\"status\":\"ok\"}");
+}
+
+void handleAutoplay() {
+  addCorsHeaders();
+  if (webServer.hasArg("val")) {
+    AUTOPLAY = (webServer.arg("val").toInt() == 1);
+    saveAutoplay(AUTOPLAY);
+  }
+  webServer.send(200, "application/json", "{\"status\":\"ok\"}");
+}
+
+void handleGame() {
+  addCorsHeaders();
+  String action = webServer.arg("action");
+  if (action == "start") {
+    int g = webServer.arg("game").toInt();
+    bool demo = webServer.hasArg("demo") ? (webServer.arg("demo").toInt() == 1) : false;
+    BTcontrol = true;
+    startGame(g, true, false);
+    gameDemo = demo;
+    gamePaused = false;
+    gamemodeFlag = true;
+  } else if (action == "button") {
+    int btn = webServer.arg("btn").toInt(); // 0: Up, 1: Right, 2: Down, 3: Left
+    BTcontrol = true;
+    buttons = btn;
+    controlFlag = true;
+    gamePaused = false;
+    gameDemo = false;
+  } else if (action == "demo") {
+    int val = webServer.arg("val").toInt();
+    gameDemo = (val == 1);
+    if (gameDemo) {
+      gamePaused = false;
+      controlFlag = false;
+    }
+  }
+  webServer.send(200, "application/json", "{\"status\":\"ok\"}");
+}
+
+void handleForgetWifi() {
+  addCorsHeaders();
+  setSsid("");
+  setPass("");
+  saveStaticIP(0, 0, 0, 0);
+  saveSettings();
+  EEPROM.commit();
+
+  webServer.send(200, "application/json", "{\"status\":\"ok, network forgotten, restarting into AP mode\"}");
+  webServer.client().flush();
+  delay(800);
+  WiFi.disconnect(true);
+  delay(400);
+  ESP.restart();
 }
 
 void handlePower() {
@@ -95,6 +216,12 @@ void handleSpeed() {
     if (eff != 255) {
       saveEffectSpeed(eff, s);
     }
+    byte tmp_game = mapModeToGame(thisMode);
+    if (tmp_game != 255) {
+      gameSpeed = s;
+      gameTimer.setInterval(s);
+      saveGameSpeed(tmp_game, s);
+    }
     saveSettingsTimer.reset();
   }
   webServer.send(200, "application/json", "{\"status\":\"ok\"}");
@@ -119,7 +246,15 @@ void handleMode() {
       gamemodeFlag = tmp_game != 255;
       effectsFlag = tmp_effect != 255;
 
-      setTimersForMode(thisMode);
+      if (gamemodeFlag) {
+        BTcontrol = true;
+        startGame(tmp_game, true, false);
+        gameDemo = true; // Автономный бот по умолчанию при выборе игры
+        gamePaused = false;
+      } else {
+        setTimersForMode(thisMode);
+      }
+
       FastLED.clear();
       FastLED.show();
     }
@@ -140,7 +275,6 @@ void handleText() {
         thisMode = DEMO_TEXT_2; // Случайный
       } else {
         thisMode = DEMO_TEXT_0;
-        if (col.startsWith("0x")) col = col.substring(2);
         globalColor = HEXtoInt(col);
       }
     } else {
@@ -149,6 +283,7 @@ void handleText() {
     runningFlag = true;
     effectsFlag = false;
     drawingFlag = false;
+    gamemodeFlag = false;
     loadingFlag = true;
   }
   webServer.send(200, "application/json", "{\"status\":\"ok\"}");
@@ -160,7 +295,6 @@ void handleDraw() {
     int x = webServer.arg("x").toInt();
     int y = webServer.arg("y").toInt();
     String colStr = webServer.arg("color");
-    if (colStr.startsWith("0x")) colStr = colStr.substring(2);
     uint32_t col = HEXtoInt(colStr);
 
     BTcontrol = true;
@@ -191,7 +325,6 @@ void handleFill() {
   addCorsHeaders();
   if (webServer.hasArg("color")) {
     String colStr = webServer.arg("color");
-    if (colStr.startsWith("0x")) colStr = colStr.substring(2);
     uint32_t col = HEXtoInt(colStr);
 
     BTcontrol = true;
@@ -266,6 +399,16 @@ void initWebServer() {
   webServer.on("/api/state", HTTP_GET, handleGetState);
   webServer.on("/api/cmd", HTTP_POST, handleCmd);
   webServer.on("/api/cmd", HTTP_GET, handleCmd);
+  webServer.on("/api/special", HTTP_POST, handleSpecial);
+  webServer.on("/api/special", HTTP_GET, handleSpecial);
+  webServer.on("/api/step", HTTP_POST, handleStep);
+  webServer.on("/api/step", HTTP_GET, handleStep);
+  webServer.on("/api/autoplay", HTTP_POST, handleAutoplay);
+  webServer.on("/api/autoplay", HTTP_GET, handleAutoplay);
+  webServer.on("/api/game", HTTP_POST, handleGame);
+  webServer.on("/api/game", HTTP_GET, handleGame);
+  webServer.on("/api/forget_wifi", HTTP_POST, handleForgetWifi);
+  webServer.on("/api/forget_wifi", HTTP_GET, handleForgetWifi);
   webServer.on("/api/power", HTTP_POST, handlePower);
   webServer.on("/api/power", HTTP_GET, handlePower);
   webServer.on("/api/brightness", HTTP_POST, handleBrightness);
