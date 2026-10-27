@@ -100,7 +100,7 @@ void bluetoothRoutine() {
     
     else if (runningFlag && !isAlarming) {                         // бегущая строка - Running Text
       String txt = runningText;
-      uint32_t txtColor = globalColor;
+      uint32_t txtColor = (thisMode == DEMO_TEXT_1) ? 1 : ((thisMode == DEMO_TEXT_2) ? 2 : globalColor);
       if (wifi_print_ip && (wifi_current_ip.length() > 0)) {
         txt = wifi_current_ip;     
         txtColor = 0xffffff;

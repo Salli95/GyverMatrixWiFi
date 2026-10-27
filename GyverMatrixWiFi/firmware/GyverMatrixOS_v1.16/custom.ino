@@ -303,6 +303,10 @@ void setTimersForMode(byte aMode) {
     if (tmp_effect != 255) {
       effectSpeed = getEffectSpeed(tmp_effect);
       effectTimer.setInterval(effectSpeed);
+      byte effBr = getEffectBrightness(tmp_effect);
+      globalBrightness = effBr;
+      breathBrightness = effBr;
+      FastLED.setBrightness(effBr);
     } else {
       byte tmp_game = mapModeToGame(aMode);
       if (tmp_game != 255) {

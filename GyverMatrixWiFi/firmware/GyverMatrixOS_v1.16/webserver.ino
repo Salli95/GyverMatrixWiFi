@@ -112,6 +112,10 @@ void handleSpecial() {
   addCorsHeaders();
   if (webServer.hasArg("id")) {
     int id = webServer.arg("id").toInt();
+    runningFlag = false;
+    drawingFlag = false;
+    wifi_print_ip = false;
+    wifi_current_ip = "";
     setSpecialMode(id);
   }
   webServer.send(200, "application/json", "{\"status\":\"ok\"}");
@@ -140,6 +144,12 @@ void handleGame() {
   if (action == "start") {
     int g = webServer.arg("game").toInt();
     bool demo = webServer.hasArg("demo") ? (webServer.arg("demo").toInt() == 1) : false;
+    runningFlag = false;
+    drawingFlag = false;
+    wifi_print_ip = false;
+    wifi_current_ip = "";
+    specialMode = false;
+    specialModeId = -1;
     BTcontrol = true;
     startGame(g, true, false);
     gameDemo = demo;
@@ -183,6 +193,10 @@ void handlePower() {
   addCorsHeaders();
   if (webServer.hasArg("state")) {
     int state = webServer.arg("state").toInt();
+    runningFlag = false;
+    drawingFlag = false;
+    wifi_print_ip = false;
+    wifi_current_ip = "";
     if (state == 0) {
       setSpecialMode(0); // Черный экран (выключить)
     } else {
@@ -201,6 +215,10 @@ void handleBrightness() {
     if (specialMode) specialBrightness = b;
     FastLED.setBrightness(b);
     saveMaxBrightness(globalBrightness);
+    byte eff = mapModeToEffect(thisMode);
+    if (eff != 255) {
+      saveEffectBrightness(eff, b);
+    }
     saveSettingsTimer.reset();
   }
   webServer.send(200, "application/json", "{\"status\":\"ok\"}");
@@ -236,6 +254,10 @@ void handleMode() {
       isNightClock = false;
       isTurnedOff = false;
       specialModeId = -1;
+      runningFlag = false;
+      drawingFlag = false;
+      wifi_print_ip = false;
+      wifi_current_ip = "";
       thisMode = id;
       setLastMode(thisMode);
       autoplayTimer = millis();
@@ -267,6 +289,13 @@ void handleText() {
   if (webServer.hasArg("msg")) {
     String txt = webServer.arg("msg");
     runningText = txt;
+    wifi_print_ip = false;
+    wifi_current_ip = "";
+    specialMode = false;
+    specialModeId = -1;
+    isNightClock = false;
+    isTurnedOff = false;
+    BTcontrol = true;
     if (webServer.hasArg("color")) {
       String col = webServer.arg("color");
       if (col == "1") {

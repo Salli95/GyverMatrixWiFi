@@ -567,6 +567,8 @@ void nextMode();
 void prevMode();
 void setSpecialMode(int spc_mode);
 void startGame(byte game, bool newGame, bool paused);
+void saveEffectBrightness(byte effect, byte bright);
+byte getEffectBrightness(byte effect);
 void bloodElevatorRoutine();
 void overlookCarpetRoutine();
 void redrumRoutine();
@@ -649,7 +651,6 @@ void setup() {
   if (wifi_connected) {
     MDNS.begin("matrix");
     MDNS.addService("http", "tcp", 80);
-    showCurrentIP();
   } else {
     startCaptivePortal();
     MDNS.begin("matrix");
@@ -707,6 +708,9 @@ void setup() {
     loadingFlag = true;
     setTimersForMode(thisMode);
   }
+  runningFlag = false;
+  wifi_print_ip = false;
+  wifi_current_ip = "";
 }
 
 void loop() {

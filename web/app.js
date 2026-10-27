@@ -3,14 +3,14 @@
 // Управление матрицей по Wi-Fi: автопоиск, эффекты, бегущая строка, рисование, игры
 // ==============================================================================
 
-const DEFAULT_IP = 'http://192.168.0.103';
-
-// Если запущен локальный сервер (localhost:3000), используем встроенный прокси
+// Если запущен локальный сервер (localhost:3000), используем встроенный динамический прокси
 const isLocalServer = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
+// Динамический хост матрицы (без жестко зашитых IP):
+// Работает в любой сети (офис, дом, точка доступа)
 let matrixHost = localStorage.getItem('gyver_matrix_host');
-if (!matrixHost || matrixHost === 'http://matrix.local') {
-  matrixHost = DEFAULT_IP;
+if (!matrixHost || matrixHost === 'http://192.168.0.103') {
+  matrixHost = 'http://matrix.local';
 }
 
 let isScanning = false;
@@ -86,7 +86,7 @@ function updateHostDisplay() {
 // ------------------------------------------------------------------------------
 // Сетевые запросы
 // ------------------------------------------------------------------------------
-async function fetchWithTimeout(url, options = {}, timeout = 2500) {
+async function fetchWithTimeout(url, options = {}, timeout = 3500) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
   try {
@@ -111,7 +111,8 @@ async function sendApi(endpoint, params = {}) {
     const base = getBaseUrl();
     const url = new URL(endpoint, base);
     Object.keys(params).forEach(k => url.searchParams.append(k, params[k]));
-    const res = await fetchWithTimeout(url.toString(), { method: 'POST' });
+    const headers = isLocalServer ? { 'X-Matrix-Target': matrixHost } : {};
+    const res = await fetchWithTimeout(url.toString(), { method: 'POST', headers }, 4000);
     setConnected(true);
     return await res.json();
   } catch (e) {
@@ -123,18 +124,22 @@ async function sendApi(endpoint, params = {}) {
 }
 
 async function tryFallbackHost() {
-  if (matrixHost !== DEFAULT_IP) {
-    try {
-      const res = await fetchWithTimeout(`${DEFAULT_IP}/api/state`, { method: 'GET' }, 1200);
-      if (res.ok) {
-        matrixHost = DEFAULT_IP;
-        localStorage.setItem('gyver_matrix_host', matrixHost);
-        updateHostDisplay();
-        setConnected(true);
-        const data = await res.json();
-        applyState(data);
-      }
-    } catch (err) {}
+  const candidates = ['http://matrix.local', 'http://192.168.4.1'];
+  for (const c of candidates) {
+    if (matrixHost !== c) {
+      try {
+        const res = await fetchWithTimeout(`${c}/api/state`, { method: 'GET' }, 1200);
+        if (res.ok) {
+          matrixHost = c;
+          localStorage.setItem('gyver_matrix_host', matrixHost);
+          updateHostDisplay();
+          setConnected(true);
+          const data = await res.json();
+          applyState(data);
+          return;
+        }
+      } catch (err) {}
+    }
   }
 }
 
@@ -144,27 +149,25 @@ async function checkConnection() {
   isChecking = true;
   try {
     const base = getBaseUrl();
-    const res = await fetchWithTimeout(`${base}/api/state`, { method: 'GET' }, 2000);
+    const headers = isLocalServer ? { 'X-Matrix-Target': matrixHost } : {};
+    const res = await fetchWithTimeout(`${base}/api/state`, { method: 'GET', headers }, 3500);
     if (res.ok) {
       const data = await res.json();
+      if (data.ip && data.ip !== '0.0.0.0') {
+        const discovered = `http://${data.ip}`;
+        if (matrixHost === 'http://matrix.local' || matrixHost.includes('192.168.4.1')) {
+          matrixHost = discovered;
+          localStorage.setItem('gyver_matrix_host', matrixHost);
+          updateHostDisplay();
+        }
+      }
       setConnected(true);
       applyState(data);
       return true;
     }
   } catch (e) {
-    if (!isLocalServer && matrixHost !== DEFAULT_IP) {
-      try {
-        const res2 = await fetchWithTimeout(`${DEFAULT_IP}/api/state`, { method: 'GET' }, 1500);
-        if (res2.ok) {
-          matrixHost = DEFAULT_IP;
-          localStorage.setItem('gyver_matrix_host', matrixHost);
-          updateHostDisplay();
-          setConnected(true);
-          const data2 = await res2.json();
-          applyState(data2);
-          return true;
-        }
-      } catch (e2) {}
+    if (!isLocalServer) {
+      await tryFallbackHost();
     }
     setConnected(false);
     return false;
@@ -278,6 +281,33 @@ function applyState(data) {
 // ------------------------------------------------------------------------------
 // Сканер локальной сети
 // ------------------------------------------------------------------------------
+// Определение локальной подсети клиента через WebRTC (работает в любом офисе/сети)
+async function detectLocalSubnet() {
+  return new Promise((resolve) => {
+    try {
+      const pc = new RTCPeerConnection({ iceServers: [] });
+      pc.createDataChannel('');
+      pc.createOffer().then(o => pc.setLocalDescription(o)).catch(() => resolve(null));
+      const t = setTimeout(() => { try { pc.close(); } catch(e){} resolve(null); }, 1500);
+      pc.onicecandidate = (ice) => {
+        if (!ice || !ice.candidate || !ice.candidate.candidate) return;
+        const parts = ice.candidate.candidate.split(' ');
+        for (const part of parts) {
+          const m = part.match(/^(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})$/);
+          if (m && !part.startsWith('127.')) {
+            clearTimeout(t);
+            try { pc.close(); } catch(e){}
+            resolve(`${m[1]}.${m[2]}.${m[3]}`);
+            return;
+          }
+        }
+      };
+    } catch (e) {
+      resolve(null);
+    }
+  });
+}
+
 async function startIpScan() {
   if (isScanning) return;
   isScanning = true;
@@ -289,24 +319,43 @@ async function startIpScan() {
 
   if (btn) { btn.disabled = true; btn.textContent = 'Поиск...'; }
   if (progWrap) progWrap.style.display = 'block';
-  if (desc) desc.textContent = 'Проверяем адрес 192.168.0.103...';
+  if (desc) desc.textContent = 'Поиск матрицы по имени matrix.local...';
 
-  // 1. Проверяем сохраненный IP
+  // 1. Проверяем универсальное mDNS имя (matrix.local)
   try {
-    const res = await fetchWithTimeout('http://192.168.0.103/api/state', { method: 'GET' }, 1200);
+    const res = await fetchWithTimeout('http://matrix.local/api/state', { method: 'GET' }, 2000);
     if (res.ok) {
-      foundMatrix('http://192.168.0.103');
+      const data = await res.json();
+      foundMatrix(data.ip ? `http://${data.ip}` : 'http://matrix.local');
       return;
     }
   } catch (e) {}
 
-  // 2. Сканируем 192.168.0.X и 192.168.1.X
-  const subnets = ['192.168.0', '192.168.1'];
+  // 2. Проверяем режим точки доступа MatrixAP (192.168.4.1)
+  if (desc) desc.textContent = 'Проверка режима точки доступа (192.168.4.1)...';
+  try {
+    const resAp = await fetchWithTimeout('http://192.168.4.1/api/state', { method: 'GET' }, 1200);
+    if (resAp.ok) {
+      foundMatrix('http://192.168.4.1');
+      return;
+    }
+  } catch (e) {}
+
+  // 3. Автоматически определяем текущую подсеть устройства (офис, дом и т.д.)
+  if (desc) desc.textContent = 'Определение текущей подсети...';
+  const detectedSubnet = await detectLocalSubnet();
+  const subnets = [];
+  if (detectedSubnet) subnets.push(detectedSubnet);
+  ['192.168.0', '192.168.1', '10.0.0', '192.168.88'].forEach(s => {
+    if (!subnets.includes(s)) subnets.push(s);
+  });
+
   let total = subnets.length * 254;
   let scanned = 0;
 
   for (const subnet of subnets) {
-    if (desc) desc.textContent = `Сканируем сеть ${subnet}.X...`;
+    if (!isScanning) return;
+    if (desc) desc.textContent = `Сканируем подсеть ${subnet}.X...`;
     const batchSize = 25;
     for (let i = 1; i <= 254; i += batchSize) {
       if (!isScanning) return;
@@ -355,7 +404,7 @@ function foundMatrix(host) {
 }
 
 function promptManualIp() {
-  const ip = prompt('Введите IP адрес матрицы (например 192.168.0.103):', matrixHost.replace('http://', ''));
+  const ip = prompt('Введите IP адрес матрицы (например 192.168.1.50 или matrix.local):', matrixHost.replace('http://', ''));
   if (ip && ip.trim()) {
     let clean = ip.trim();
     if (!clean.startsWith('http')) clean = 'http://' + clean;

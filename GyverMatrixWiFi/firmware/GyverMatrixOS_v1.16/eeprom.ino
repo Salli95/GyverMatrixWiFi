@@ -288,6 +288,25 @@ void saveEffectParams(byte effect, int speed, boolean overlay, boolean use) {
   eepromModified = true;
 }
 
+void saveEffectBrightness(byte effect, byte bright) {
+  if (effect < MODES_AMOUNT) {
+    int addr = 400 + effect;
+    if (EEPROMread(addr) != bright) {
+      EEPROMwrite(addr, bright);
+      eepromModified = true;
+    }
+  }
+}
+
+byte getEffectBrightness(byte effect) {
+  if (effect < MODES_AMOUNT) {
+    int addr = 400 + effect;
+    byte b = EEPROMread(addr);
+    if (b >= 1 && b <= 255) return b;
+  }
+  return getMaxBrightness();
+}
+
 void saveEffectSpeed(byte effect, int speed) {
   if (speed != getEffectSpeed(effect)) {
     const int addr = EFFECT_EEPROM;  
