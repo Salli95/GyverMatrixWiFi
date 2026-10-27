@@ -893,8 +893,8 @@ void saveStaticIP(byte p1, byte p2, byte p3, byte p4) {
 
 byte getLastMode() {
   byte m = EEPROMread(154);
-  if (m < MODES_AMOUNT) return m;
-  return 0;
+  if (m < MODES_AMOUNT && m != 0) return m;
+  return DEMO_FIRE; // По умолчанию камин (20) без часов
 }
 
 void setLastMode(byte mode) {

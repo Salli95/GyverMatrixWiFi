@@ -533,6 +533,7 @@ String TEXT_1 = "";                // Строка заданного цвета
 String TEXT_2 = "";                // Строка с плавной сменой цвета
 String TEXT_3 = "";                // Строка с разноцветными буквами
 String runningText = "";           // Текущий текст бегущей строки, задаваемый пользователем со смартфона
+bool showBootSsidOnce = true;
 
 // Сервер не может инициировать отправку сообщения клиенту - только в ответ на запрос клиента
 // Следующие две переменные хранят сообщения, формируемые по инициативе сервера и отправляются в ответ на ближайший запрос от клиента,
@@ -695,22 +696,32 @@ void setup() {
   // Номер спец-режима запоминается при его включении и сбрасывается при включении обычного режима или игры
   // Это позволяет в случае внезапной перезагрузки матрицы (например по wdt), когда был включен спец-режим (например ночные часы или выкл. матрицы)
   // снова включить его, а не отображать случайный обычный после включения матрицы
-  int8_t spc_mode = getCurrentSpecMode();
-  if (spc_mode >= 0 && spc_mode <= 7)
-    setSpecialMode(spc_mode);
-  else {
-    thisMode = getLastMode();
-    if (thisMode >= MODES_AMOUNT) thisMode = 14;
-    byte tmp_effect = mapModeToEffect(thisMode);
-    byte tmp_game = mapModeToGame(thisMode);
-    gamemodeFlag = tmp_game != 255;
-    effectsFlag = tmp_effect != 255;
-    loadingFlag = true;
-    setTimersForMode(thisMode);
-  }
-  runningFlag = false;
+  // Сбрасываем спец-режимы, по умолчанию камин (DEMO_FIRE = 20) без часов
+  setCurrentSpecMode(-1);
+  specialMode = false;
+  specialModeId = -1;
+  specialClock = false;
+  isNightClock = false;
+  isTurnedOff = false;
+
+  thisMode = getLastMode();
+  if (thisMode >= MODES_AMOUNT || thisMode == 0) thisMode = DEMO_FIRE;
+
+  byte tmp_effect = mapModeToEffect(thisMode);
+  byte tmp_game = mapModeToGame(thisMode);
+  gamemodeFlag = tmp_game != 255;
+  effectsFlag = tmp_effect != 255;
+  loadingFlag = true;
+  setTimersForMode(thisMode);
+
+  // Вывод названия подключенной Wi-Fi сети при перезагрузке матрицы (один раз)
+  showBootSsidOnce = true;
+  runningFlag = true;
   wifi_print_ip = false;
   wifi_current_ip = "";
+  runningText = wifi_connected ? ("Wi-Fi: " + WiFi.SSID()) : String(F("MatrixAP (192.168.4.1)"));
+  globalColor = 0x00FFCC; // Яркий бирюзовый цвет для бегущей строки
+  scrollTimer.setInterval(scrollSpeed);
 }
 
 void loop() {

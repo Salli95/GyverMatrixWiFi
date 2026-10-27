@@ -105,6 +105,16 @@ void bluetoothRoutine() {
            : TEXT_1; 
       }      
       fillString(txt, txtColor); 
+
+      // Если это вывод имени сети при старте платы - после одного полного прохода выключаем бегущую строку и включаем камин/эффект
+      if (showBootSsidOnce && fullTextFlag) {
+        showBootSsidOnce = false;
+        runningFlag = false;
+        fullTextFlag = false;
+        loadingFlag = true;
+        FastLED.clear();
+      }
+
       // Включенная бегущая строка только формирует строку в массиве точек матрицы, но не отображает ее
       // Если эффекты выключены - нужно принудительно вызывать отображение матрицы
       if (!effectsFlag) 
