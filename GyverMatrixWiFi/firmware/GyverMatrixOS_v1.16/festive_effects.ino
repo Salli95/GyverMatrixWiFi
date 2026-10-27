@@ -17,6 +17,11 @@ void pumpkinRoutine() {
 
   FastLED.clear();
 
+  // Живое свечение тыквы (эффект пламени свечи внутри)
+  uint8_t pulse = inoise8(millis() / 6, 120);
+  CRGB orangeBright = CHSV(18, 255, map(pulse, 0, 255, 210, 255)); // Яркий тыквенный
+  CRGB orangeShadow = CHSV(14, 255, map(pulse, 0, 255, 140, 180)); // Ребра тыквы
+
   // Рисуем тело тыквы (15x16), центр X = 7
   for (int8_t y = 2; y <= 11; y++) {
     for (int8_t x = 2; x <= 12; x++) {
@@ -26,46 +31,51 @@ void pumpkinRoutine() {
 
       // Вертикальные сегменты тыквы (ребра)
       bool isRidge = (x == 3 || x == 5 || x == 7 || x == 9 || x == 11);
-      CRGB pumpkinColor = isRidge ? CRGB(180, 50, 0) : CRGB(255, 90, 0);
-      drawPixelXY(x, y, pumpkinColor);
+      drawPixelXY(x, y, isRidge ? orangeShadow : orangeBright);
     }
   }
 
   // Зеленый хвостик тыквы сверху
-  drawPixelXY(7, 12, CRGB(20, 140, 20));
-  drawPixelXY(7, 13, CRGB(20, 150, 20));
-  drawPixelXY(8, 14, CRGB(15, 120, 15));
+  drawPixelXY(7, 12, CRGB(20, 150, 20));
+  drawPixelXY(7, 13, CRGB(25, 170, 25));
+  drawPixelXY(8, 14, CRGB(15, 130, 15));
 
-  // Мерцающее пламя внутри прорезей (шум огня)
-  uint8_t flicker1 = inoise8(millis() / 4, 100);
-  uint8_t flicker2 = inoise8(millis() / 5, 200);
+  // Черный цвет для максимальной контрастности вырезанных глаз, носа и рта
+  CRGB cutBlack = CRGB(0, 0, 0);
 
-  CRGB flame1 = CHSV(map(flicker1, 0, 255, 20, 42), 255, map(flicker1, 0, 255, 190, 255));
-  CRGB flame2 = CHSV(map(flicker2, 0, 255, 20, 42), 255, map(flicker2, 0, 255, 190, 255));
-
-  // Треугольные вырезанные глаза (симметрично относительно X=7)
+  // Вырезанные треугольные глаза (глубокий черный цвет)
   // Левый глаз:
-  drawPixelXY(4, 8, flame1);
-  drawPixelXY(5, 8, flame1);
-  drawPixelXY(5, 9, flame2);
+  drawPixelXY(4, 8, cutBlack);
+  drawPixelXY(5, 8, cutBlack);
+  drawPixelXY(5, 9, cutBlack);
+  drawPixelXY(4, 9, cutBlack);
 
-  // Правый глаз:
-  drawPixelXY(10, 8, flame2);
-  drawPixelXY(9, 8, flame2);
-  drawPixelXY(9, 9, flame1);
+  // Правый глаз (симметрично относительно X=7):
+  drawPixelXY(9, 8, cutBlack);
+  drawPixelXY(10, 8, cutBlack);
+  drawPixelXY(9, 9, cutBlack);
+  drawPixelXY(10, 9, cutBlack);
 
-  // Треугольный нос по центру
-  drawPixelXY(7, 7, flame1);
+  // Вырезанный треугольный нос по центру (черный)
+  drawPixelXY(7, 7, cutBlack);
+  drawPixelXY(7, 8, cutBlack);
 
-  // Зловещая зубастая пасть (симметрично относительно X=7)
-  drawPixelXY(4, 5, flame1);
-  drawPixelXY(5, 4, flame2);
-  drawPixelXY(6, 5, flame1);
-  drawPixelXY(7, 4, flame2);
-  drawPixelXY(8, 5, flame1);
-  drawPixelXY(9, 4, flame2);
-  drawPixelXY(10, 5, flame1);
-  drawPixelXY(7, 3, flame1);
+  // Зловещая зубастая пасть (черные вырезы на оранжевом фоне)
+  // Верхние зубы
+  drawPixelXY(4, 5, cutBlack);
+  drawPixelXY(6, 5, cutBlack);
+  drawPixelXY(8, 5, cutBlack);
+  drawPixelXY(10, 5, cutBlack);
+
+  // Основная линия оскала
+  for (int8_t x = 3; x <= 11; x++) {
+    drawPixelXY(x, 4, cutBlack);
+  }
+
+  // Нижние зубы
+  drawPixelXY(5, 3, cutBlack);
+  drawPixelXY(7, 3, cutBlack);
+  drawPixelXY(9, 3, cutBlack);
 }
 
 // ------------------------------------------------------------------------------

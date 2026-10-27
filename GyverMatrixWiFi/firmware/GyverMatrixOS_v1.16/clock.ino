@@ -78,11 +78,10 @@ void parseNTP() {
 
 void getNTP() {
   if (!wifi_connected) return;
-  WiFi.hostByName(ntpServerName, timeServerIP);
-  if (!timeServerIP.isSet()) timeServerIP.fromString(F("80.240.216.155"));  // Один из ru.pool.ntp.org // 195.3.254.2
-  printNtpServerName();
-  sendNTPpacket(timeServerIP); // send an NTP packet to a time server
-  // wait to see if a reply is available
+  if (!timeServerIP.isSet()) {
+    timeServerIP.fromString(F("80.240.216.155"));  // Прямой IP (ru.pool.ntp.org) без блокирующего DNS
+  }
+  sendNTPpacket(timeServerIP);
   ntp_t = millis();
 }
 

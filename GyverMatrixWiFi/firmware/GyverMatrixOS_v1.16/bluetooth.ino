@@ -54,28 +54,18 @@ void bluetoothRoutine() {
   if (!parseStarted) {                          
 
     if (wifi_connected && useNtp) {
-      if (ntp_t > 0 && millis() - ntp_t > 5000) {
-        Serial.println(F("Таймаут NTP запроса!"));
+      if (ntp_t > 0 && millis() - ntp_t > 4000) {
         ntp_t = 0;
         ntp_cnt++;
-        if (init_time && ntp_cnt >= 10) {
-          Serial.println(F("Не удалось установить соединение с NTP сервером."));  
+        if (ntp_cnt >= 3) {
           refresh_time = false;
+          ntp_cnt = 0;
         }
       }
       bool timeToSync = ntpSyncTimer.isReady();
       if (timeToSync) { ntp_cnt = 0; refresh_time = true; }
-      if (timeToSync || (refresh_time && ntp_t == 0 && (ntp_cnt < 10 || !init_time))) {
+      if (refresh_time && ntp_t == 0 && ntp_cnt < 3) {
         getNTP();
-        if (ntp_cnt >= 10) {
-          if (init_time) {
-            udp.flush();
-          } else {
-            //ESP.restart();
-            ntp_cnt = 0;
-            connectToNetwork();
-          }
-        }        
       }
     }
 
