@@ -45,7 +45,7 @@
 
 #define MATRIX_TYPE 0         // тип матрицы: 0 - зигзаг, 1 - параллельная
 #define CONNECTION_ANGLE 0    // угол подключения: 0 - левый нижний, 1 - левый верхний, 2 - правый верхний, 3 - правый нижний
-#define STRIP_DIRECTION 1     // направление ленты из угла: 0 - вправо, 1 - вверх, 2 - влево, 3 - вниз
+#define STRIP_DIRECTION 0     // направление ленты из угла: 0 - вправо, 1 - вверх, 2 - влево, 3 - вниз
 // при неправильной настрйоке матрицы вы получите предупреждение "Wrong matrix parameters! Set to default"
 // шпаргалка по настройке матрицы здесь! https://alexgyver.ru/matrix_guide/
 
@@ -604,7 +604,7 @@ void setup() {
   }
 
   loadSettings();
-  thisMode = getLastMode();
+  useAutoBrightness = false; setUseAutoBrightness(false); thisMode = getLastMode();
   if (strlen(ssid) == 0 && strlen(NETWORK_SSID) > 0) {
     strcpy(ssid, NETWORK_SSID);
     strcpy(pass, NETWORK_PASS);
@@ -682,15 +682,13 @@ void setup() {
   if (spc_mode >= 0 && spc_mode <= 7)
     setSpecialMode(spc_mode);
   else {
-    while (1) {
-      // Если режим отмечен флагом "использовать" - используем его, иначе берем следующий (и проверяем его)
-      if (getUsageForMode(thisMode)) break;
-      thisMode++;
-      if (thisMode >= MODES_AMOUNT) {
-        thisMode = 0;
-        break;
-      }
-    }
+    thisMode = getLastMode();
+    if (thisMode >= MODES_AMOUNT) thisMode = 14;
+    byte tmp_effect = mapModeToEffect(thisMode);
+    byte tmp_game = mapModeToGame(thisMode);
+    gamemodeFlag = tmp_game != 255;
+    effectsFlag = tmp_effect != 255;
+    loadingFlag = true;
     setTimersForMode(thisMode);
   }
 }

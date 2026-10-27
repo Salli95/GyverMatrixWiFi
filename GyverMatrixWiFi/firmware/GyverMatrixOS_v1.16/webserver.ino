@@ -81,7 +81,7 @@ void handleBrightness() {
     FastLED.setBrightness(b);
     FastLED.show();
     saveMaxBrightness(globalBrightness);
-    saveSettingsTimer.reset();
+    saveSettings();
   }
   webServer.send(200, "application/json", "{\"status\":\"ok\"}");
 }
@@ -89,9 +89,14 @@ void handleBrightness() {
 void handleSpeed() {
   addCorsHeaders();
   if (webServer.hasArg("val")) {
-    int s = constrain(webServer.arg("val").toInt(), 0, 255);
+    int s = constrain(webServer.arg("val").toInt(), 10, 255);
     effectSpeed = s;
     effectTimer.setInterval(s);
+    byte eff = mapModeToEffect(thisMode);
+    if (eff != 255) {
+      saveEffectSpeed(eff, s);
+      saveSettings();
+    }
   }
   webServer.send(200, "application/json", "{\"status\":\"ok\"}");
 }
@@ -107,6 +112,7 @@ void handleMode() {
       specialModeId = -1;
       thisMode = id;
       setLastMode(thisMode);
+      autoplayTimer = millis();
       loadingFlag = true;
 
       byte tmp_effect = mapModeToEffect(thisMode);

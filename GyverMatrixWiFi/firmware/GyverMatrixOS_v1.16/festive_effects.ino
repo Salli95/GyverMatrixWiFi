@@ -1,5 +1,5 @@
 // ==============================================================================
-// Праздничный пакет эффектов для GyverMatrix (WS2812B 16x16)
+// Праздничный пакет эффектов для GyverMatrix (WS2812B 15x16)
 // Хэллоуин: Тыква Джек, Привидения, Глаза во тьме, Паук и паутина, Котел, Капли крови
 // Новый Год: Новогодняя елочка, Праздничная гирлянда, Салют, Метель, Северное сияние
 // ==============================================================================
@@ -15,56 +15,57 @@ void pumpkinRoutine() {
     FastLED.clear();
   }
 
-  // Рисуем тело тыквы (16x16)
-  for (int8_t y = 1; y <= 12; y++) {
-    for (int8_t x = 2; x <= 13; x++) {
+  FastLED.clear();
+
+  // Рисуем тело тыквы (15x16), центр X = 7
+  for (int8_t y = 2; y <= 11; y++) {
+    for (int8_t x = 2; x <= 12; x++) {
       // Скругление углов тыквы
-      if ((y == 1 || y == 12) && (x < 4 || x > 11)) continue;
-      if ((y == 2 || y == 11) && (x < 3 || x > 12)) continue;
+      if ((y == 2 || y == 11) && (x < 4 || x > 10)) continue;
+      if ((y == 3 || y == 10) && (x < 3 || x > 11)) continue;
 
       // Вертикальные сегменты тыквы (ребра)
-      bool isRidge = (x == 3 || x == 6 || x == 9 || x == 12);
-      CRGB pumpkinColor = isRidge ? CRGB(160, 45, 0) : CRGB(235, 75, 0);
+      bool isRidge = (x == 3 || x == 5 || x == 7 || x == 9 || x == 11);
+      CRGB pumpkinColor = isRidge ? CRGB(180, 50, 0) : CRGB(255, 90, 0);
       drawPixelXY(x, y, pumpkinColor);
     }
   }
 
-  // Зеленый черешок тыквы сверху
-  drawPixelXY(7, 13, CRGB(20, 130, 20));
-  drawPixelXY(8, 13, CRGB(20, 140, 20));
-  drawPixelXY(8, 14, CRGB(15, 110, 15));
-  drawPixelXY(9, 14, CRGB(10, 90, 10));
+  // Зеленый хвостик тыквы сверху
+  drawPixelXY(7, 12, CRGB(20, 140, 20));
+  drawPixelXY(7, 13, CRGB(20, 150, 20));
+  drawPixelXY(8, 14, CRGB(15, 120, 15));
 
   // Мерцающее пламя внутри прорезей (шум огня)
   uint8_t flicker1 = inoise8(millis() / 4, 100);
   uint8_t flicker2 = inoise8(millis() / 5, 200);
 
-  CRGB flame1 = CHSV(map(flicker1, 0, 255, 18, 38), 255, map(flicker1, 0, 255, 180, 255));
-  CRGB flame2 = CHSV(map(flicker2, 0, 255, 18, 38), 255, map(flicker2, 0, 255, 180, 255));
+  CRGB flame1 = CHSV(map(flicker1, 0, 255, 20, 42), 255, map(flicker1, 0, 255, 190, 255));
+  CRGB flame2 = CHSV(map(flicker2, 0, 255, 20, 42), 255, map(flicker2, 0, 255, 190, 255));
 
-  // Треугольные вырезанные глаза
+  // Треугольные вырезанные глаза (симметрично относительно X=7)
+  // Левый глаз:
   drawPixelXY(4, 8, flame1);
   drawPixelXY(5, 8, flame1);
   drawPixelXY(5, 9, flame2);
 
-  drawPixelXY(11, 8, flame2);
+  // Правый глаз:
   drawPixelXY(10, 8, flame2);
-  drawPixelXY(10, 9, flame1);
+  drawPixelXY(9, 8, flame2);
+  drawPixelXY(9, 9, flame1);
 
-  // Треугольный нос
+  // Треугольный нос по центру
   drawPixelXY(7, 7, flame1);
-  drawPixelXY(8, 7, flame2);
-  drawPixelXY(7, 8, flame1);
 
-  // Зловещая зубастая пасть
-  drawPixelXY(4, 4, flame1);
-  drawPixelXY(5, 3, flame2);
-  drawPixelXY(6, 4, flame1);
-  drawPixelXY(7, 3, flame2);
-  drawPixelXY(8, 3, flame1);
+  // Зловещая зубастая пасть (симметрично относительно X=7)
+  drawPixelXY(4, 5, flame1);
+  drawPixelXY(5, 4, flame2);
+  drawPixelXY(6, 5, flame1);
+  drawPixelXY(7, 4, flame2);
+  drawPixelXY(8, 5, flame1);
   drawPixelXY(9, 4, flame2);
-  drawPixelXY(10, 3, flame1);
-  drawPixelXY(11, 4, flame2);
+  drawPixelXY(10, 5, flame1);
+  drawPixelXY(7, 3, flame1);
 }
 
 // ------------------------------------------------------------------------------
@@ -84,8 +85,8 @@ void ghostsRoutine() {
   if (loadingFlag) {
     loadingFlag = false;
     modeCode = MC_BALL;
-    ghosts[0] = {2.0, 4.0, 0.35, 0.20, 0};
-    ghosts[1] = {10.0, 9.0, -0.30, 0.25, 128};
+    ghosts[0] = {1.0, 3.0, 0.28, 0.18, 0};
+    ghosts[1] = {8.0, 8.0, -0.25, 0.22, 128};
     FastLED.clear();
   }
 
@@ -101,7 +102,7 @@ void ghostsRoutine() {
 
     // Отражение от краев
     if (ghosts[g].x < 1 || ghosts[g].x > WIDTH - 5) ghosts[g].vx = -ghosts[g].vx;
-    if (ghosts[g].y < 3 || ghosts[g].y > HEIGHT - 5) ghosts[g].vy = -ghosts[g].vy;
+    if (ghosts[g].y < 2 || ghosts[g].y > HEIGHT - 6) ghosts[g].vy = -ghosts[g].vy;
 
     int8_t gx = (int8_t)ghosts[g].x;
     int8_t gy = (int8_t)ghosts[g].y;
@@ -136,7 +137,7 @@ void ghostsRoutine() {
 // 3. ХЭЛЛОУИН: Глаза во тьме (Spooky Eyes)
 // Мигающие и оглядывающиеся пары светящихся глаз монстров в темноте
 // ------------------------------------------------------------------------------
-int8_t eyeX = 6, eyeY = 7;
+int8_t eyeX = 5, eyeY = 7;
 int8_t lookOffset = 0;
 uint8_t eyeState = 0; // 0-открытие, 1-ожидание/взгляд, 2-моргание, 3-закрытие
 uint8_t eyeBrightness = 0;
@@ -181,7 +182,7 @@ void spookyEyesRoutine() {
     else {
       eyeBrightness = 0;
       // Новое случайное место и цвет глаз
-      eyeX = random(2, WIDTH - 5);
+      eyeX = random(1, WIDTH - 6);
       eyeY = random(3, HEIGHT - 4);
       lookOffset = 0;
       byte colType = random(0, 3);
@@ -235,14 +236,14 @@ void spiderRoutine() {
 
   // Нити паутины в верхних углах
   CRGB webColor = CRGB(35, 35, 45);
-  for (byte i = 0; i < 5; i++) {
+  for (byte i = 0; i < 4; i++) {
     drawPixelXY(i, HEIGHT - 1 - i, webColor);
     drawPixelXY(WIDTH - 1 - i, HEIGHT - 1 - i, webColor);
   }
 
-  // Вертикальная паутинная нить от потолка до паука
+  // Вертикальная паутинная нить от потолка по центру X=7
   for (int8_t y = HEIGHT - 1; y >= spiderY; y--) {
-    drawPixelXY(8, y, CRGB(60, 60, 70));
+    drawPixelXY(7, y, CRGB(65, 65, 75));
   }
 
   // Движение паука вверх-вниз
@@ -258,22 +259,23 @@ void spiderRoutine() {
     }
   }
 
-  // Тело паука (2x2, фиолетово-красный оттенок)
-  CRGB spiderBody = CRGB(180, 15, 40);
+  // Тело паука (X=6..8, Y=spiderY..spiderY-1)
+  CRGB spiderBody = CRGB(160, 15, 35);
   drawPixelXY(7, spiderY, spiderBody);
-  drawPixelXY(8, spiderY, spiderBody);
+  drawPixelXY(6, spiderY - 1, spiderBody);
   drawPixelXY(7, spiderY - 1, spiderBody);
   drawPixelXY(8, spiderY - 1, spiderBody);
 
   // Глазки паука (светящиеся точки)
-  drawPixelXY(7, spiderY - 1, CRGB(255, 200, 0));
+  drawPixelXY(6, spiderY, CRGB(255, 200, 0));
+  drawPixelXY(8, spiderY, CRGB(255, 200, 0));
 
   // Лапки паука (шевелятся)
-  CRGB legColor = CRGB(100, 10, 20);
+  CRGB legColor = CRGB(110, 10, 25);
   int8_t legOffset = (spiderLegPhase % 2 == 0) ? 1 : 0;
-  drawPixelXY(6, spiderY + legOffset, legColor);
+  drawPixelXY(5, spiderY + legOffset, legColor);
   drawPixelXY(9, spiderY + legOffset, legColor);
-  drawPixelXY(6, spiderY - 1 - legOffset, legColor);
+  drawPixelXY(5, spiderY - 1 - legOffset, legColor);
   drawPixelXY(9, spiderY - 1 - legOffset, legColor);
 }
 
@@ -293,7 +295,7 @@ void cauldronRoutine() {
     loadingFlag = false;
     modeCode = MC_NOISE_LAVA;
     for (byte i = 0; i < 4; i++) {
-      bubbles[i] = {(int8_t)random(3, 13), (int8_t)random(4, 7), (uint8_t)random(1, 3)};
+      bubbles[i] = {(int8_t)random(3, 12), (int8_t)random(4, 7), (uint8_t)random(1, 3)};
     }
     FastLED.clear();
   }
@@ -301,22 +303,22 @@ void cauldronRoutine() {
   FastLED.clear();
 
   // Чугунный черный котел внизу
-  for (int8_t x = 2; x <= 13; x++) {
+  for (int8_t x = 2; x <= 12; x++) {
     drawPixelXY(x, 1, CRGB(30, 25, 30));
     drawPixelXY(x, 2, CRGB(40, 35, 40));
     drawPixelXY(x, 3, CRGB(30, 25, 30));
   }
   drawPixelXY(1, 3, CRGB(45, 40, 45));
-  drawPixelXY(14, 3, CRGB(45, 40, 45));
+  drawPixelXY(13, 3, CRGB(45, 40, 45));
 
   // Угли под котлом
-  for (int8_t x = 4; x <= 11; x++) {
+  for (int8_t x = 4; x <= 10; x++) {
     uint8_t spark = inoise8(x * 30, millis() / 3);
     drawPixelXY(x, 0, CHSV(map(spark, 0, 255, 0, 25), 255, spark));
   }
 
   // Поверхность кипящего зелья (волны зеленого и фиолетового цвета)
-  for (int8_t x = 2; x <= 13; x++) {
+  for (int8_t x = 2; x <= 12; x++) {
     uint8_t wave = inoise8(x * 40, millis() / 4);
     CRGB slimeCol = (wave > 140) ? CRGB(0, 255, 30) : CRGB(160, 0, 220);
     drawPixelXY(x, 4, slimeCol);
@@ -327,9 +329,8 @@ void cauldronRoutine() {
   for (byte i = 0; i < 4; i++) {
     bubbles[i].y += bubbles[i].speed;
     if (bubbles[i].y >= HEIGHT - 2) {
-      // Пузырь лопнул - создаем новый на дне котла
       bubbles[i].y = 4;
-      bubbles[i].x = random(3, 13);
+      bubbles[i].x = random(3, 12);
       bubbles[i].speed = random(1, 3);
     }
     drawPixelXY(bubbles[i].x, bubbles[i].y, CRGB(80, 255, 60));
@@ -397,7 +398,7 @@ void bloodDripsRoutine() {
 
 // ------------------------------------------------------------------------------
 // 7. НОВЫЙ ГОД: Новогодняя ёлочка (Christmas Tree)
-// Зеленая ель с мигающей разноцветной гирляндой и сияющей звездой
+// Зеленая ель с мигающей разноцветной гирляндой и сияющей звездой (центр X=7)
 // ------------------------------------------------------------------------------
 void christmasTreeRoutine() {
   if (loadingFlag) {
@@ -408,58 +409,60 @@ void christmasTreeRoutine() {
 
   FastLED.clear();
 
-  // Коричневый ствол ели
-  drawPixelXY(7, 0, CRGB(90, 45, 10));
-  drawPixelXY(8, 0, CRGB(90, 45, 10));
-  drawPixelXY(7, 1, CRGB(90, 45, 10));
-  drawPixelXY(8, 1, CRGB(90, 45, 10));
+  // Снежный покров внизу (y = 0)
+  for (int8_t x = 0; x < WIDTH; x++) {
+    drawPixelXY(x, 0, CRGB(40, 50, 75));
+  }
 
-  // Хвоя (3 яруса ели)
-  CRGB pineDark = CRGB(0, 90, 15);
-  CRGB pineLight = CRGB(10, 140, 25);
+  // Коричневый ствол ели по центру (X=7)
+  drawPixelXY(7, 1, CRGB(110, 55, 15));
+  drawPixelXY(7, 2, CRGB(110, 55, 15));
 
-  // Нижний ярус (y: 2..5)
-  for (int8_t y = 2; y <= 5; y++) {
-    int8_t halfW = (6 - y) + 2;
-    for (int8_t x = 7 - halfW; x <= 8 + halfW; x++) {
+  // Хвоя (3 яруса ели, центр X=7)
+  CRGB pineDark = CRGB(0, 95, 20);
+  CRGB pineLight = CRGB(10, 145, 30);
+
+  // Нижний ярус (y: 3..6)
+  for (int8_t y = 3; y <= 6; y++) {
+    int8_t halfW = (6 - y) + 2; // y=3 -> halfW=5 (x: 2..12); y=6 -> halfW=2 (x: 5..9)
+    for (int8_t x = 7 - halfW; x <= 7 + halfW; x++) {
       drawPixelXY(x, y, (x + y) % 2 == 0 ? pineDark : pineLight);
     }
   }
 
-  // Средний ярус (y: 6..9)
-  for (int8_t y = 6; y <= 9; y++) {
-    int8_t halfW = (10 - y) + 1;
-    for (int8_t x = 7 - halfW; x <= 8 + halfW; x++) {
+  // Средний ярус (y: 7..9)
+  for (int8_t y = 7; y <= 9; y++) {
+    int8_t halfW = (9 - y) + 2; // y=7 -> halfW=4 (x: 3..11); y=9 -> halfW=2 (x: 5..9)
+    for (int8_t x = 7 - halfW; x <= 7 + halfW; x++) {
       drawPixelXY(x, y, (x + y) % 2 == 0 ? pineDark : pineLight);
     }
   }
 
   // Верхний ярус (y: 10..12)
   for (int8_t y = 10; y <= 12; y++) {
-    int8_t halfW = (13 - y);
-    for (int8_t x = 7 - halfW; x <= 8 + halfW; x++) {
+    int8_t halfW = (12 - y) + 1; // y=10 -> halfW=3 (x: 4..10); y=12 -> halfW=1 (x: 6..8)
+    for (int8_t x = 7 - halfW; x <= 7 + halfW; x++) {
       drawPixelXY(x, y, (x + y) % 2 == 0 ? pineDark : pineLight);
     }
   }
 
-  // Верхушка - сияющая золотая звезда (y: 13..15)
+  // Верхушка - сияющая золотая звезда (y: 13..15, центр X=7)
   uint8_t starPulse = sin8(millis() / 5);
-  CRGB starColor = CHSV(42, 240, map(starPulse, 0, 255, 180, 255));
+  CRGB starColor = CHSV(42, 240, map(starPulse, 0, 255, 190, 255));
   drawPixelXY(7, 13, starColor);
-  drawPixelXY(8, 13, starColor);
   drawPixelXY(7, 14, starColor);
-  drawPixelXY(8, 14, starColor);
   drawPixelXY(6, 13, starColor);
-  drawPixelXY(9, 13, starColor);
+  drawPixelXY(8, 13, starColor);
   drawPixelXY(7, 15, starColor);
 
-  // Мерцающая праздничная гирлянда на ветках
+  // Мерцающая праздничная гирлянда на ветках (симметричные координаты)
   static const int8_t lightsPos[][2] PROGMEM = {
-    {3, 2}, {6, 2}, {9, 2}, {12, 2},
-    {4, 4}, {7, 4}, {10, 4},
-    {5, 6}, {8, 6}, {11, 6},
-    {6, 8}, {9, 8},
-    {7, 10}, {8, 11}
+    {3, 3}, {7, 3}, {11, 3},
+    {4, 5}, {10, 5},
+    {5, 7}, {7, 7}, {9, 7},
+    {6, 9}, {8, 9},
+    {5, 10}, {9, 10},
+    {7, 11}
   };
   static const byte lightsCount = sizeof(lightsPos) / sizeof(lightsPos[0]);
 
@@ -467,7 +470,6 @@ void christmasTreeRoutine() {
   for (byte i = 0; i < lightsCount; i++) {
     int8_t lx = pgm_read_byte(&(lightsPos[i][0]));
     int8_t ly = pgm_read_byte(&(lightsPos[i][1]));
-    // Разноцветное мерцание огней
     CRGB lColor = CHSV((t * 12 + i * 45) % 255, 255, 255);
     drawPixelXY(lx, ly, lColor);
   }
@@ -549,7 +551,7 @@ void fireworksRoutine() {
     }
     if (!hasActiveSparks) {
       rocketActive = true;
-      rocketX = random(3, WIDTH - 3);
+      rocketX = random(2, WIDTH - 2);
       rocketY = 0;
       rocketVy = random(7, 11) / 10.0;
       rocketColor = CHSV(random(0, 255), 255, 255);
@@ -677,4 +679,3 @@ void auroraRoutine() {
     }
   }
 }
-

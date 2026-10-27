@@ -1,17 +1,27 @@
 // ==============================================================================
-// GyverMatrix Cloud Web Control (Vercel Edition)
-// Автопоиск матрицы в Wi-Fi сети (IP Scanner) + управление эффектами, текстом и холстом
+// GyverMatrix Web Control (Pro Edition)
+// Управление матрицей по Wi-Fi (автопоиск, эффекты, бегущая строка, рисование, геймпад)
 // ==============================================================================
 
-let matrixHost = localStorage.getItem('gyver_matrix_host') || 'http://192.168.0.103';
+const DEFAULT_IP = 'http://192.168.0.103';
+let matrixHost = localStorage.getItem('gyver_matrix_host');
+
+if (!matrixHost || matrixHost === 'http://matrix.local') {
+  // По умолчанию отдаем предпочтение проверенному локальному IP
+  matrixHost = DEFAULT_IP;
+}
+
 let isScanning = false;
 let isConnected = false;
 let curColor = '#ff0044';
 let isDrawing = false;
 let isPowerOn = true;
 let isAutoplay = true;
+let lastUserInteraction = 0;
+let brightTimeout = null;
+let speedTimeout = null;
 
-// Каталог всех эффектов
+// Каталог всех эффектов с их точными ID прошивки GyverMatrixOS v1.16
 const ALL_EFFECTS = [
   // Хэллоуин
   { id: 35, name: '🎃 Тыква Джек', cat: 'halloween' },
@@ -54,8 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
   updateHostDisplay();
   checkConnection();
 
-  // Фоновый опрос статуса каждые 4 секунды
-  setInterval(checkConnection, 4000);
+  // Фоновый опрос статуса каждые 3 секунды
+  setInterval(checkConnection, 3000);
 });
 
 function updateHostDisplay() {
@@ -91,7 +101,24 @@ async function sendApi(endpoint, params = {}) {
     return await res.json();
   } catch (e) {
     console.warn('API error:', e);
-    setConnected(false);
+    // Пробуем альтернативный адрес, если текущий недоступен
+    tryFallbackHost();
+  }
+}
+
+async function tryFallbackHost() {
+  if (matrixHost !== DEFAULT_IP) {
+    try {
+      const res = await fetchWithTimeout(`${DEFAULT_IP}/api/state`, { method: 'GET' }, 1000);
+      if (res.ok) {
+        matrixHost = DEFAULT_IP;
+        localStorage.setItem('gyver_matrix_host', matrixHost);
+        updateHostDisplay();
+        setConnected(true);
+        const data = await res.json();
+        applyState(data);
+      }
+    } catch (err) {}
   }
 }
 
@@ -111,6 +138,21 @@ async function checkConnection() {
       return true;
     }
   } catch (e) {
+    // Пробуем резервный адрес
+    if (matrixHost !== DEFAULT_IP) {
+      try {
+        const res2 = await fetchWithTimeout(`${DEFAULT_IP}/api/state`, { method: 'GET' }, 1500);
+        if (res2.ok) {
+          matrixHost = DEFAULT_IP;
+          localStorage.setItem('gyver_matrix_host', matrixHost);
+          updateHostDisplay();
+          setConnected(true);
+          const data2 = await res2.json();
+          applyState(data2);
+          return true;
+        }
+      } catch (e2) {}
+    }
     setConnected(false);
     return false;
   }
@@ -121,41 +163,68 @@ function setConnected(online) {
   const ind = document.getElementById('status-ind');
   const txt = document.getElementById('status-text');
   if (online) {
-    ind.className = 'status-indicator online';
-    txt.textContent = 'Подключено';
-    document.getElementById('discovery-banner').style.display = 'none';
+    if (ind) ind.className = 'status-indicator online';
+    if (txt) txt.textContent = 'Подключено';
+    const banner = document.getElementById('discovery-banner');
+    if (banner) banner.style.display = 'none';
   } else {
-    ind.className = 'status-indicator offline';
-    txt.textContent = 'Офлайн';
-    document.getElementById('discovery-banner').style.display = 'flex';
+    if (ind) ind.className = 'status-indicator offline';
+    if (txt) txt.textContent = 'Офлайн';
+    const banner = document.getElementById('discovery-banner');
+    if (banner) banner.style.display = 'flex';
   }
 }
 
 function applyState(data) {
-  if (data.brightness !== undefined) {
-    document.getElementById('val-bright').textContent = data.brightness;
-    document.getElementById('slider-bright').value = data.brightness;
+  // Не перебиваем слайдеры, если пользователь сам двигал их в последние 3.5 секунды
+  const now = Date.now();
+  if (now - lastUserInteraction > 3500) {
+    if (data.brightness !== undefined) {
+      const elVal = document.getElementById('val-bright');
+      const elSlider = document.getElementById('slider-bright');
+      if (elVal) elVal.textContent = data.brightness;
+      if (elSlider) elSlider.value = data.brightness;
+    }
+    if (data.speed !== undefined) {
+      const elVal = document.getElementById('val-speed');
+      const elSlider = document.getElementById('slider-speed');
+      if (elVal) elVal.textContent = data.speed;
+      if (elSlider) elSlider.value = data.speed;
+    }
   }
-  if (data.speed !== undefined) {
-    document.getElementById('val-speed').textContent = data.speed;
-    document.getElementById('slider-speed').value = data.speed;
-  }
+
   if (data.power !== undefined) {
     isPowerOn = data.power;
     const btn = document.getElementById('btn-power');
-    btn.textContent = isPowerOn ? 'Выключить' : 'Включить';
-    btn.className = isPowerOn ? 'btn btn-danger' : 'btn btn-primary';
+    if (btn) {
+      btn.textContent = isPowerOn ? 'Выключить' : 'Включить';
+      btn.className = isPowerOn ? 'btn btn-danger' : 'btn btn-primary';
+    }
   }
+
   if (data.autoplay !== undefined) {
     isAutoplay = data.autoplay;
     const btn = document.getElementById('btn-autoplay');
-    btn.textContent = isAutoplay ? 'ВКЛ' : 'ВЫКЛ';
-    btn.className = isAutoplay ? 'btn btn-primary' : 'btn';
+    if (btn) {
+      btn.textContent = isAutoplay ? 'ВКЛ' : 'ВЫКЛ';
+      btn.className = isAutoplay ? 'btn btn-primary' : 'btn';
+    }
+  }
+
+  // Подсветка карточки текущего режима
+  if (data.mode !== undefined) {
+    document.querySelectorAll('.effect-card').forEach(card => {
+      if (parseInt(card.dataset.id) === data.mode) {
+        card.classList.add('active');
+      } else {
+        card.classList.remove('active');
+      }
+    });
   }
 }
 
 // ------------------------------------------------------------------------------
-// Автопоиск матрицы в локальной сети (IP Scanner)
+// Сканер локальной сети
 // ------------------------------------------------------------------------------
 async function startIpScan() {
   if (isScanning) return;
@@ -166,12 +235,20 @@ async function startIpScan() {
   const progWrap = document.getElementById('scan-progress-wrap');
   const prog = document.getElementById('scan-progress');
 
-  btn.disabled = true;
-  btn.textContent = 'Поиск...';
-  progWrap.style.display = 'block';
-  desc.textContent = 'Проверяем адрес http://matrix.local...';
+  if (btn) { btn.disabled = true; btn.textContent = 'Поиск...'; }
+  if (progWrap) progWrap.style.display = 'block';
+  if (desc) desc.textContent = 'Проверяем адрес 192.168.0.103...';
 
-  // 1. Сначала пробуем mDNS
+  // 1. Проверяем сохраненный IP
+  try {
+    const res = await fetchWithTimeout('http://192.168.0.103/api/state', { method: 'GET' }, 1200);
+    if (res.ok) {
+      foundMatrix('http://192.168.0.103');
+      return;
+    }
+  } catch (e) {}
+
+  // 2. Проверяем mDNS
   try {
     const res = await fetchWithTimeout('http://matrix.local/api/state', { method: 'GET' }, 1200);
     if (res.ok) {
@@ -180,45 +257,28 @@ async function startIpScan() {
     }
   } catch (e) {}
 
-  // 2. Проверяем режим SoftAP
-  try {
-    const res = await fetchWithTimeout('http://192.168.4.1/api/state', { method: 'GET' }, 800);
-    if (res.ok) {
-      foundMatrix('http://192.168.4.1');
-      return;
-    }
-  } catch (e) {}
-
-  // 3. Сканируем популярные домашние подсети: 192.168.1.X и 192.168.0.X
-  const subnets = ['192.168.1', '192.168.0'];
-  let totalIps = subnets.length * 254;
+  // 3. Сканируем 192.168.0.X и 192.168.1.X
+  const subnets = ['192.168.0', '192.168.1'];
+  let total = subnets.length * 254;
   let scanned = 0;
 
   for (const subnet of subnets) {
-    desc.textContent = `Сканируем сеть ${subnet}.X...`;
-
-    // Сканируем пачками по 20 IP параллельно для скорости
-    const batchSize = 20;
+    if (desc) desc.textContent = `Сканируем сеть ${subnet}.X...`;
+    const batchSize = 25;
     for (let i = 1; i <= 254; i += batchSize) {
       if (!isScanning) return;
-
       const promises = [];
       for (let j = i; j < i + batchSize && j <= 254; j++) {
-        const ip = `http://${subnet}.${j}`;
+        const targetIp = `http://${subnet}.${j}`;
         promises.push(
-          fetchWithTimeout(`${ip}/api/state`, { method: 'GET' }, 650)
-            .then(res => {
-              if (res.ok) return ip;
-              throw new Error();
-            })
+          fetchWithTimeout(`${targetIp}/api/state`, { method: 'GET' }, 650)
+            .then(res => { if (res.ok) return targetIp; throw new Error(); })
             .catch(() => null)
         );
       }
-
       const results = await Promise.all(promises);
       scanned += promises.length;
-      prog.style.width = Math.round((scanned / totalIps) * 100) + '%';
-
+      if (prog) prog.style.width = Math.round((scanned / total) * 100) + '%';
       const found = results.find(r => r !== null);
       if (found) {
         foundMatrix(found);
@@ -227,11 +287,9 @@ async function startIpScan() {
     }
   }
 
-  // Если не найдено
-  desc.textContent = 'Матрица не найдена. Укажите IP вручную.';
-  btn.disabled = false;
-  btn.textContent = 'Найти в сети';
-  progWrap.style.display = 'none';
+  if (desc) desc.textContent = 'Матрица не найдена. Укажите IP вручную.';
+  if (btn) { btn.disabled = false; btn.textContent = 'Найти в сети'; }
+  if (progWrap) progWrap.style.display = 'none';
   isScanning = false;
 }
 
@@ -242,21 +300,19 @@ function foundMatrix(host) {
   setConnected(true);
 
   const desc = document.getElementById('discovery-desc');
-  desc.textContent = `Найдено устройство: ${host}!`;
+  if (desc) desc.textContent = `Найдено устройство: ${host}!`;
 
   const btn = document.getElementById('btn-scan');
-  btn.disabled = false;
-  btn.textContent = 'Найдено!';
-  document.getElementById('scan-progress-wrap').style.display = 'none';
+  if (btn) { btn.disabled = false; btn.textContent = 'Найдено!'; }
+  const progWrap = document.getElementById('scan-progress-wrap');
+  if (progWrap) progWrap.style.display = 'none';
   isScanning = false;
 
-  setTimeout(() => {
-    document.getElementById('discovery-banner').style.display = 'none';
-  }, 2500);
+  checkConnection();
 }
 
 function promptManualIp() {
-  const ip = prompt('Введите IP адрес или хост матрицы:', matrixHost);
+  const ip = prompt('Введите IP адрес матрицы (например 192.168.0.103):', matrixHost.replace('http://', ''));
   if (ip && ip.trim()) {
     let clean = ip.trim();
     if (!clean.startsWith('http')) clean = 'http://' + clean;
@@ -268,7 +324,9 @@ function promptManualIp() {
 }
 
 function saveManualHost() {
-  const val = document.getElementById('manual-host-input').value.trim();
+  const input = document.getElementById('manual-host-input');
+  if (!input) return;
+  const val = input.value.trim();
   if (val) {
     let clean = val;
     if (!clean.startsWith('http')) clean = 'http://' + clean;
@@ -289,6 +347,7 @@ function openIpModal() {
 // ------------------------------------------------------------------------------
 function renderEffects(filter = 'all') {
   const container = document.getElementById('effects-container');
+  if (!container) return;
   container.innerHTML = '';
 
   const filtered = filter === 'all' ? ALL_EFFECTS : ALL_EFFECTS.filter(e => e.cat === filter);
@@ -296,8 +355,9 @@ function renderEffects(filter = 'all') {
   filtered.forEach(eff => {
     const card = document.createElement('div');
     card.className = `effect-card cat-${eff.cat}`;
+    card.dataset.id = eff.id;
     card.textContent = eff.name;
-    card.onclick = (e) => {
+    card.onclick = () => {
       document.querySelectorAll('.effect-card').forEach(c => c.classList.remove('active'));
       card.classList.add('active');
       setMode(eff.id);
@@ -319,26 +379,44 @@ function setMode(id) {
 function togglePower() {
   isPowerOn = !isPowerOn;
   const btn = document.getElementById('btn-power');
-  btn.textContent = isPowerOn ? 'Выключить' : 'Включить';
-  btn.className = isPowerOn ? 'btn btn-danger' : 'btn btn-primary';
+  if (btn) {
+    btn.textContent = isPowerOn ? 'Выключить' : 'Включить';
+    btn.className = isPowerOn ? 'btn btn-danger' : 'btn btn-primary';
+  }
   sendApi('/api/power', { state: isPowerOn ? 1 : 0 });
 }
 
+// Плавная регулировка яркости с дебаунсом (без спама на ESP8266)
 function setBrightness(v) {
-  document.getElementById('val-bright').textContent = v;
-  sendApi('/api/brightness', { val: v });
+  lastUserInteraction = Date.now();
+  const elVal = document.getElementById('val-bright');
+  if (elVal) elVal.textContent = v;
+
+  if (brightTimeout) clearTimeout(brightTimeout);
+  brightTimeout = setTimeout(() => {
+    sendApi('/api/brightness', { val: v });
+  }, 70);
 }
 
+// Плавная регулировка скорости с дебаунсом (без спама на ESP8266)
 function setSpeed(v) {
-  document.getElementById('val-speed').textContent = v;
-  sendApi('/api/speed', { val: v });
+  lastUserInteraction = Date.now();
+  const elVal = document.getElementById('val-speed');
+  if (elVal) elVal.textContent = v;
+
+  if (speedTimeout) clearTimeout(speedTimeout);
+  speedTimeout = setTimeout(() => {
+    sendApi('/api/speed', { val: v });
+  }, 70);
 }
 
 function toggleAutoplay() {
   isAutoplay = !isAutoplay;
   const btn = document.getElementById('btn-autoplay');
-  btn.textContent = isAutoplay ? 'ВКЛ' : 'ВЫКЛ';
-  btn.className = isAutoplay ? 'btn btn-primary' : 'btn';
+  if (btn) {
+    btn.textContent = isAutoplay ? 'ВКЛ' : 'ВЫКЛ';
+    btn.className = isAutoplay ? 'btn btn-primary' : 'btn';
+  }
   sendCmd(isAutoplay ? '$16 0' : '$16 1');
 }
 
@@ -354,10 +432,11 @@ function sendButton(code) {
 }
 
 // ------------------------------------------------------------------------------
-// Холст 16x16 для рисования
+// Холст 15x16 для рисования
 // ------------------------------------------------------------------------------
 function initCanvas() {
   const canvasEl = document.getElementById('matrix-canvas');
+  if (!canvasEl) return;
   canvasEl.innerHTML = '';
 
   for (let y = 15; y >= 0; y--) {
@@ -366,8 +445,8 @@ function initCanvas() {
       px.className = 'pixel';
       px.dataset.x = x;
       px.dataset.y = y;
-      px.addEventListener('pointerdown', (e) => { isDrawing = true; paintPixel(px); });
-      px.addEventListener('pointerenter', (e) => { if (isDrawing) paintPixel(px); });
+      px.addEventListener('pointerdown', () => { isDrawing = true; paintPixel(px); });
+      px.addEventListener('pointerenter', () => { if (isDrawing) paintPixel(px); });
       canvasEl.appendChild(px);
     }
   }
@@ -382,27 +461,31 @@ function setColor(c, el) {
 
 function paintPixel(px) {
   px.style.background = curColor;
-  const hex = curColor.replace('#', '0x');
-  sendApi('/api/draw', { x: px.dataset.x, y: px.dataset.y, color: hex });
+  sendApi('/api/draw', {
+    x: px.dataset.x,
+    y: px.dataset.y,
+    color: curColor.replace('#', '0x')
+  });
 }
 
 function clearCanvas() {
-  document.querySelectorAll('.pixel').forEach(p => p.style.background = '#181a20');
+  document.querySelectorAll('#matrix-canvas .pixel').forEach(p => p.style.background = '#151515');
   sendApi('/api/clear');
 }
 
 function fillCanvas() {
-  document.querySelectorAll('.pixel').forEach(p => p.style.background = curColor);
+  document.querySelectorAll('#matrix-canvas .pixel').forEach(p => p.style.background = curColor);
   sendApi('/api/fill', { color: curColor.replace('#', '0x') });
 }
 
 // ------------------------------------------------------------------------------
-// Навигация по табам
+// Навигация по вкладкам
 // ------------------------------------------------------------------------------
-function switchTab(tabId, el) {
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + tabId).classList.add('active');
-  if (el) el.classList.add('active');
-}
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
 
+  const tab = document.getElementById('tab-' + tabId);
+  if (tab) tab.classList.add('active');
+  if (btn) btn.classList.add('active');
+}

@@ -310,6 +310,7 @@ void saveEffectUsage(byte effect, boolean use) {
 }
 
 boolean getEffectUsage(byte effect) {
+  if (effect >= 29) return true;
   const int addr = EFFECT_EEPROM;
   return EEPROMread(addr + effect*3 + 2) == 1;
 }
@@ -713,7 +714,7 @@ void setNtpServer(String server) {
 }
 
 bool getUseAutoBrightness() {
-  return EEPROMread(31) == 1;
+  return false;
 }
 
 void setUseAutoBrightness(boolean use) {  

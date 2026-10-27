@@ -79,7 +79,7 @@ void bluetoothRoutine() {
       }
     }
 
-    if (useAutoBrightness && autoBrightnessTimer.isReady()) {
+    if (false && useAutoBrightness && autoBrightnessTimer.isReady()) {
       // Во время работы будильника-рассвет, ночных часов, если матрица "выключена" или один из режимов "лампы" - освещения
       // авторегулировки яркости нет.    
       if (!(isAlarming || isNightClock || isTurnedOff || specialModeId == 2 || specialModeId == 3 || specialModeId == 6 || specialModeId == 7 || thisMode == DEMO_DAWN_ALARM)) {

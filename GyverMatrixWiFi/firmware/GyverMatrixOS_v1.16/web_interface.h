@@ -364,14 +364,26 @@ function togglePower() {
   sendApi('/api/power', { state: isPowerOn ? 1 : 0 });
 }
 
+let lastUserInteraction = 0;
+let brightTimeout = null;
+let speedTimeout = null;
+
 function setBrightness(v) {
+  lastUserInteraction = Date.now();
   document.getElementById('val-bright').textContent = v;
-  sendApi('/api/brightness', { val: v });
+  if (brightTimeout) clearTimeout(brightTimeout);
+  brightTimeout = setTimeout(() => {
+    sendApi('/api/brightness', { val: v });
+  }, 70);
 }
 
 function setSpeed(v) {
+  lastUserInteraction = Date.now();
   document.getElementById('val-speed').textContent = v;
-  sendApi('/api/speed', { val: v });
+  if (speedTimeout) clearTimeout(speedTimeout);
+  speedTimeout = setTimeout(() => {
+    sendApi('/api/speed', { val: v });
+  }, 70);
 }
 
 function setMode(id) {
