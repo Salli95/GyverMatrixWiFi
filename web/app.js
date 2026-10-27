@@ -23,8 +23,12 @@ let speedTimeout = null;
 
 // Каталог всех эффектов с их точными ID прошивки GyverMatrixOS v1.16
 const ALL_EFFECTS = [
-  // Хэллоуин
+  // Хэллоуин и «Сияние»
   { id: 35, name: '🎃 Тыква Джек', cat: 'halloween' },
+  { id: 46, name: '🩸 Кровавый лифт', cat: 'halloween' },
+  { id: 47, name: '🔶 Ковер Оверлук', cat: 'halloween' },
+  { id: 48, name: '🪞 REDRUM', cat: 'halloween' },
+  { id: 49, name: '❄️ Ледяной лабиринт', cat: 'halloween' },
   { id: 36, name: '👻 Привидения', cat: 'halloween' },
   { id: 37, name: '👀 Глаза во тьме', cat: 'halloween' },
   { id: 38, name: '🕷 Паук и сеть', cat: 'halloween' },

@@ -689,3 +689,367 @@ void auroraRoutine() {
     }
   }
 }
+
+
+// ==============================================================================
+// СПЕЦЭФФЕКТЫ ПО МОТИВАМ ФИЛЬМА «СИЯНИЕ» (THE SHINING)
+// 12. Кровавый лифт (Blood Elevator)
+// 13. Ковер отеля Оверлук (Overlook Carpet)
+// 14. Надпись REDRUM (REDRUM Mirror)
+// 15. Ледяной лабиринт (Frozen Maze)
+// ==============================================================================
+
+// ------------------------------------------------------------------------------
+// 12. КРОВАВЫЙ ЛИФТ (The Blood Elevator)
+// Металлические двери отеля "Оверлук" распахиваются, и из них вырывается
+// лавина бурлящей багровой крови, затапливающая матрицу снизу доверху.
+// ------------------------------------------------------------------------------
+uint8_t elevPhase = 0;      // 0: закрыт, 1: открывается, 2: поток крови, 3: затоплен, 4: спад
+uint8_t elevDoorOpen = 0;   // 0..7
+uint8_t elevBloodLevel = 0; // 0..16
+uint32_t elevTimer = 0;
+
+void bloodElevatorRoutine() {
+  if (loadingFlag) {
+    loadingFlag = false;
+    modeCode = MC_IMAGE;
+    elevPhase = 0;
+    elevDoorOpen = 0;
+    elevBloodLevel = 0;
+    elevTimer = millis();
+    FastLED.clear();
+  }
+
+  uint32_t now = millis();
+
+  // Логика смены фаз лифта
+  if (elevPhase == 0) { // Двери закрыты 2.5 секунды
+    if (now - elevTimer > 2500) {
+      elevPhase = 1;
+      elevTimer = now;
+    }
+  } else if (elevPhase == 1) { // Двери плавно открываются
+    if (now - elevTimer > 75) {
+      elevDoorOpen++;
+      elevTimer = now;
+      if (elevDoorOpen >= 7) {
+        elevPhase = 2;
+        elevBloodLevel = 1;
+      }
+    }
+  } else if (elevPhase == 2) { // Волна крови поднимается
+    if (now - elevTimer > 90) {
+      elevBloodLevel++;
+      elevTimer = now;
+      if (elevBloodLevel >= HEIGHT) {
+        elevPhase = 3;
+        elevTimer = now;
+      }
+    }
+  } else if (elevPhase == 3) { // Полное затопление 3 секунды
+    if (now - elevTimer > 3000) {
+      elevPhase = 4;
+      elevTimer = now;
+    }
+  } else if (elevPhase == 4) { // Кровь спадает и двери закрываются
+    if (now - elevTimer > 60) {
+      if (elevBloodLevel > 0) elevBloodLevel--;
+      if (elevDoorOpen > 0) elevDoorOpen--;
+      elevTimer = now;
+      if (elevBloodLevel == 0 && elevDoorOpen == 0) {
+        elevPhase = 0;
+        elevTimer = now;
+      }
+    }
+  }
+
+  FastLED.clear();
+
+  // Рисуем нутро лифта (глубокий кровавый мрак шахты)
+  for (int8_t y = 0; y < HEIGHT; y++) {
+    for (int8_t x = 0; x < WIDTH; x++) {
+      drawPixelXY(x, y, CRGB(30, 2, 4));
+    }
+  }
+
+  // Рисуем раздвижные бронзовые створки дверей лифта
+  CRGB doorMetal = CRGB(55, 42, 25);
+  CRGB doorTrim = CRGB(85, 68, 38);
+  int8_t leftEdge = 6 - elevDoorOpen;
+  int8_t rightEdge = 8 + elevDoorOpen;
+
+  if (leftEdge >= 0) {
+    for (int8_t x = 0; x <= leftEdge; x++) {
+      for (int8_t y = 0; y < 13; y++) {
+        drawPixelXY(x, y, (x == leftEdge || x == 0) ? doorTrim : doorMetal);
+      }
+    }
+  }
+  if (rightEdge < WIDTH) {
+    for (int8_t x = rightEdge; x < WIDTH; x++) {
+      for (int8_t y = 0; y < 13; y++) {
+        drawPixelXY(x, y, (x == rightEdge || x == WIDTH - 1) ? doorTrim : doorMetal);
+      }
+    }
+  }
+
+  // Верхняя золотая арка и указатель этажа (y: 13..15)
+  for (int8_t x = 0; x < WIDTH; x++) {
+    drawPixelXY(x, 13, CRGB(70, 55, 30));
+  }
+  drawPixelXY(6, 14, CRGB(180, 140, 30));
+  drawPixelXY(7, 14, CRGB(255, 215, 60)); // Светящаяся стрелка этажа
+  drawPixelXY(8, 14, CRGB(180, 140, 30));
+  drawPixelXY(7, 15, CRGB(220, 175, 40));
+
+  // Бурлящая лавина крови
+  if (elevPhase >= 2) {
+    for (int8_t y = 0; y < elevBloodLevel && y < HEIGHT; y++) {
+      for (int8_t x = 0; x < WIDTH; x++) {
+        uint8_t wave = inoise8(x * 45 + (now / 4), y * 40 - (now / 3), now / 5);
+        CRGB bloodCol;
+        if (y == elevBloodLevel - 1) {
+          // Пена на гребне
+          bloodCol = (wave > 150) ? CRGB(255, 120, 140) : CRGB(235, 20, 35);
+        } else if (wave > 170) {
+          bloodCol = CRGB(210, 5, 20); // Яркая струя
+        } else if (wave > 90) {
+          bloodCol = CRGB(150, 0, 12); // Основной массив крови
+        } else {
+          bloodCol = CRGB(90, 0, 8);   // Глубокий темный сгусток
+        }
+        drawPixelXY(x, y, bloodCol);
+      }
+    }
+  }
+}
+
+// ------------------------------------------------------------------------------
+// 13. КОВЕР ОТЕЛЯ «ОВЕРЛУК» (The Overlook Carpet)
+// Знаменитый шестиугольный орнамент Дэвида Хикса из коридора отеля.
+// Гипнотическая перспектива движения вперед (взгляд Дэнни на велосипеде).
+// ------------------------------------------------------------------------------
+void overlookCarpetRoutine() {
+  if (loadingFlag) {
+    loadingFlag = false;
+    modeCode = MC_NOISE_MADNESS;
+    FastLED.clear();
+  }
+
+  uint8_t scrollY = millis() / 45;
+
+  CRGB colOrange = CRGB(255, 95, 0);   // Яркий оранжевый центр
+  CRGB colTerra  = CRGB(160, 35, 10);  // Терракотово-красный
+  CRGB colDark   = CRGB(15, 4, 4);     // Темный шоколадный контур
+
+  for (int8_t y = 0; y < HEIGHT; y++) {
+    int16_t mapY = (y + scrollY) % 8;
+    for (int8_t x = 0; x < WIDTH; x++) {
+      int16_t mapX = (x + (mapY >= 4 ? 3 : 0)) % 6;
+      int16_t subY = mapY % 4;
+
+      // Определение гексагональных слоев узора Дэвида Хикса
+      bool isBorder = (mapX == 0 || mapX == 5 || (subY == 0 && (mapX == 2 || mapX == 3)));
+      bool isTerra = (mapX == 1 || mapX == 4 || subY == 0 || subY == 3);
+
+      CRGB pixelCol;
+      if (isBorder) {
+        pixelCol = colDark;
+      } else if (isTerra) {
+        pixelCol = colTerra;
+      } else {
+        pixelCol = colOrange;
+      }
+
+      drawPixelXY(x, y, pixelCol);
+    }
+  }
+}
+
+// ------------------------------------------------------------------------------
+// 14. НАДПИСЬ REDRUM (REDRUM Mirror)
+// Кровавая надпись на темной деревянной двери, которая мерцает
+// и в зеркальном отражении оборачивается в «MURDER».
+// ------------------------------------------------------------------------------
+// Растровый 3x5 алфавит для R, E, D, U, M
+static const uint16_t FONT_SHINING[] PROGMEM = {
+  0b111101111101101, // R: 0
+  0b111100110100111, // E: 1
+  0b110101101101110, // D: 2
+  0b101101101101111, // U: 3
+  0b101111111101101  // M: 4
+};
+
+static void drawCharShining(int8_t startX, int8_t startY, uint8_t charIdx, CRGB col) {
+  uint16_t glyph = pgm_read_word(&(FONT_SHINING[charIdx]));
+  for (int8_t r = 0; r < 5; r++) {
+    for (int8_t c = 0; c < 3; c++) {
+      if ((glyph >> (14 - (r * 3 + c))) & 1) {
+        drawPixelXY(startX + c, startY + (4 - r), col);
+      }
+    }
+  }
+}
+
+struct BloodDrop {
+  int8_t x;
+  float y;
+  float speed;
+  bool active;
+};
+BloodDrop redrumDrops[3];
+
+void redrumRoutine() {
+  if (loadingFlag) {
+    loadingFlag = false;
+    modeCode = MC_IMAGE;
+    for (byte i = 0; i < 3; i++) redrumDrops[i].active = false;
+    FastLED.clear();
+  }
+
+  uint32_t now = millis();
+  bool isMurder = ((now / 3500) % 2) == 1; // Каждые 3.5 секунды меняется на MURDER
+
+  FastLED.clear();
+
+  // Фон старой деревянной двери
+  for (int8_t y = 0; y < HEIGHT; y++) {
+    for (int8_t x = 0; x < WIDTH; x++) {
+      uint8_t woodGrain = inoise8(x * 60, y * 15);
+      CRGB woodCol = (woodGrain > 140) ? CRGB(35, 18, 10) : CRGB(22, 10, 6);
+      drawPixelXY(x, y, woodCol);
+    }
+  }
+
+  // Мерцающий кроваво-красный оттенок букв
+  uint8_t flicker = inoise8(now / 5, 200);
+  CRGB textCol = (flicker > 50) ? CRGB(235, 5, 15) : CRGB(160, 0, 10);
+
+  // Отрисовка двух строк букв 3x5
+  if (!isMurder) {
+    // RED (y: 9..13)
+    drawCharShining(2, 9, 0, textCol); // R
+    drawCharShining(6, 9, 1, textCol); // E
+    drawCharShining(10, 9, 2, textCol); // D
+
+    // RUM (y: 3..7)
+    drawCharShining(2, 3, 0, textCol); // R
+    drawCharShining(6, 3, 3, textCol); // U
+    drawCharShining(10, 3, 4, textCol); // M
+  } else {
+    // MUR (y: 9..13)
+    drawCharShining(2, 9, 4, textCol); // M
+    drawCharShining(6, 9, 3, textCol); // U
+    drawCharShining(10, 9, 0, textCol); // R
+
+    // DER (y: 3..7)
+    drawCharShining(2, 3, 2, textCol); // D
+    drawCharShining(6, 3, 1, textCol); // E
+    drawCharShining(10, 3, 0, textCol); // R
+  }
+
+  // Стекающие струйки крови
+  for (byte i = 0; i < 3; i++) {
+    if (!redrumDrops[i].active) {
+      if (random(0, 20) == 0) {
+        redrumDrops[i].active = true;
+        redrumDrops[i].x = (i == 0) ? 4 : (i == 1 ? 8 : 12);
+        redrumDrops[i].y = 3.0;
+        redrumDrops[i].speed = 0.15;
+      }
+    } else {
+      redrumDrops[i].speed += 0.05;
+      redrumDrops[i].y -= redrumDrops[i].speed;
+      if (redrumDrops[i].y <= 0) {
+        drawPixelXY(redrumDrops[i].x, 0, CRGB(200, 0, 10));
+        redrumDrops[i].active = false;
+      } else {
+        drawPixelXY(redrumDrops[i].x, (int8_t)redrumDrops[i].y, CRGB(220, 0, 15));
+      }
+    }
+  }
+}
+
+// ------------------------------------------------------------------------------
+// 15. ЛЕДЯНОЙ ЛАБИРИНТ (The Frozen Maze)
+// Заснеженный живой лабиринт отеля ночью в пурге.
+// Луч фонарика Джека ищет путь сквозь заснеженные стены изгороди.
+// ------------------------------------------------------------------------------
+float torchX = 7.0;
+float torchY = 7.0;
+float torchVx = 0.25;
+float torchVy = 0.18;
+
+void frozenMazeRoutine() {
+  if (loadingFlag) {
+    loadingFlag = false;
+    modeCode = MC_NOISE_OCEAN;
+    torchX = 7.0;
+    torchY = 7.0;
+    torchVx = 0.22;
+    torchVy = 0.16;
+    FastLED.clear();
+  }
+
+  // Движение луча фонарика по лабиринту
+  torchX += torchVx;
+  torchY += torchVy;
+  if (torchX <= 2.0 || torchX >= 12.0) torchVx = -torchVx;
+  if (torchY <= 2.0 || torchY >= 13.0) torchVy = -torchVy;
+
+  FastLED.clear();
+
+  // Рисуем стены лабиринта (паттерн живой изгороди)
+  for (int8_t y = 0; y < HEIGHT; y++) {
+    for (int8_t x = 0; x < WIDTH; x++) {
+      bool isWall = false;
+      // Внешняя ограда
+      if (x == 0 || x == WIDTH - 1 || y == 0 || y == HEIGHT - 1) isWall = true;
+      // Внутренние перегородки лабиринта
+      if (y == 4 && (x >= 2 && x <= 6)) isWall = true;
+      if (y == 4 && (x >= 8 && x <= 12)) isWall = true;
+      if (y == 8 && (x >= 4 && x <= 10)) isWall = true;
+      if (y == 12 && (x >= 2 && x <= 5)) isWall = true;
+      if (y == 12 && (x >= 9 && x <= 12)) isWall = true;
+      if (x == 4 && (y >= 5 && y <= 7)) isWall = true;
+      if (x == 10 && (y >= 9 && y <= 11)) isWall = true;
+
+      // Расстояние до фонарика Джека
+      float dx = x - torchX;
+      float dy = y - torchY;
+      float distSq = dx * dx + dy * dy;
+
+      if (isWall) {
+        // Заснеженные темные кусты
+        CRGB hedgeDark = CRGB(8, 24, 38);
+        if (distSq < 18.0) {
+          // Освещено фонариком (теплый свет на морозных ветках)
+          uint8_t light = map(constrain((int)distSq, 0, 18), 0, 18, 200, 20);
+          drawPixelXY(x, y, CRGB(light, light * 0.8, light * 0.5));
+        } else {
+          drawPixelXY(x, y, hedgeDark);
+        }
+      } else {
+        // Проходы лабиринта
+        if (distSq < 10.0) {
+          // Свет фонаря на снежном полу
+          uint8_t glow = map(constrain((int)distSq, 0, 10), 0, 10, 240, 40);
+          drawPixelXY(x, y, CRGB(glow, glow * 0.85, glow * 0.4));
+        } else {
+          // Замерзшая земля в темноте
+          drawPixelXY(x, y, CRGB(2, 6, 12));
+        }
+      }
+    }
+  }
+
+  // Яркая точка фонарика в руках
+  drawPixelXY((int8_t)torchX, (int8_t)torchY, CRGB(255, 245, 180));
+
+  // Хлопья метели, кружащие над лабиринтом
+  for (byte i = 0; i < 4; i++) {
+    int8_t sx = random(0, WIDTH);
+    int8_t sy = random(0, HEIGHT);
+    drawPixelXY(sx, sy, CRGB(210, 240, 255));
+  }
+}

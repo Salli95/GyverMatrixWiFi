@@ -189,6 +189,10 @@ void customModes(byte aMode) {
     case DEMO_FIREWORKS:           fireworksRoutine(); break;
     case DEMO_BLIZZARD:            blizzardRoutine(); break;
     case DEMO_AURORA:              auroraRoutine(); break;
+    case DEMO_BLOOD_ELEVATOR:      bloodElevatorRoutine(); break;
+    case DEMO_OVERLOOK_CARPET:     overlookCarpetRoutine(); break;
+    case DEMO_REDRUM:              redrumRoutine(); break;
+    case DEMO_FROZEN_MAZE:         frozenMazeRoutine(); break;
 
     // Специальные режимы - доступные только для вызова из эффекта рассвета - dawnProcedure()
     case DEMO_DAWN_ALARM_SPIRAL:   dawnLampSpiral(); break;
@@ -581,6 +585,10 @@ byte mapModeToEffect(byte aMode) {
     case DEMO_FIREWORKS:            tmp_effect = EFFECT_FIREWORKS; break;
     case DEMO_BLIZZARD:             tmp_effect = EFFECT_BLIZZARD; break;
     case DEMO_AURORA:               tmp_effect = EFFECT_AURORA; break;         // animation(5);
+    case DEMO_BLOOD_ELEVATOR:       tmp_effect = EFFECT_BLOOD_ELEVATOR; break;
+    case DEMO_OVERLOOK_CARPET:      tmp_effect = EFFECT_OVERLOOK_CARPET; break;
+    case DEMO_REDRUM:               tmp_effect = EFFECT_REDRUM; break;
+    case DEMO_FROZEN_MAZE:          tmp_effect = EFFECT_FROZEN_MAZE; break;
 
     case DEMO_TEXT_0 :  break;      // Бегущий текст
     case DEMO_TEXT_1 :  break;      // Бегущий текст
