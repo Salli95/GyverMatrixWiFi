@@ -79,7 +79,7 @@ input:focus, select:focus { border-color: var(--accent); }
 
 /* Drawing Canvas 16x16 */
 .canvas-wrapper { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-#matrix-canvas { display: grid; grid-template-columns: repeat(16, 1fr); gap: 1px; background: #000; padding: 4px; border-radius: 8px; border: 1px solid var(--border); touch-action: none; width: min(90vw, 320px); height: min(90vw, 320px); }
+#matrix-canvas { display: grid; grid-template-columns: repeat(15, 1fr); gap: 1px; background: #000; padding: 4px; border-radius: 8px; border: 1px solid var(--border); touch-action: none; width: min(90vw, 320px); height: min(90vw, 320px); }
 .pixel { background: #151515; border-radius: 2px; }
 .palette { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 .color-dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
@@ -402,7 +402,7 @@ function sendButton(btnCode) {
 // Canvas 16x16
 const canvasEl = document.getElementById('matrix-canvas');
 for (let y = 15; y >= 0; y--) {
-  for (let x = 0; x < 16; x++) {
+  for (let x = 0; x < 15; x++) {
     const px = document.createElement('div');
     px.className = 'pixel';
     px.dataset.x = x;

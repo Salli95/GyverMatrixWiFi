@@ -106,6 +106,7 @@ void handleMode() {
       isTurnedOff = false;
       specialModeId = -1;
       thisMode = id;
+      setLastMode(thisMode);
       loadingFlag = true;
 
       byte tmp_effect = mapModeToEffect(thisMode);

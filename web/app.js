@@ -361,7 +361,7 @@ function initCanvas() {
   canvasEl.innerHTML = '';
 
   for (let y = 15; y >= 0; y--) {
-    for (let x = 0; x < 16; x++) {
+    for (let x = 0; x < 15; x++) {
       const px = document.createElement('div');
       px.className = 'pixel';
       px.dataset.x = x;

@@ -177,7 +177,7 @@ void customModes(byte aMode) {
     case DEMO_ANIMATION_4:         animation(4); break;
     case DEMO_ANIMATION_5:         animation(5); break;
 
-    // Праздничные эффекты
+    //  
     case DEMO_PUMPKIN:             pumpkinRoutine(); break;
     case DEMO_GHOSTS:              ghostsRoutine(); break;
     case DEMO_SPOOKY_EYES:         spookyEyesRoutine(); break;
@@ -241,6 +241,7 @@ void nextModeHandler() {
   }
 
   setTimersForMode(thisMode);
+  setLastMode(thisMode);
 
   byte tmp_effect = mapModeToEffect(thisMode);  
   byte tmp_game = mapModeToGame(thisMode);
@@ -276,6 +277,7 @@ void prevModeHandler() {
   loadingFlag = true;
   autoplayTimer = millis();
   setTimersForMode(thisMode);
+  setLastMode(thisMode);
 
   byte tmp_effect = mapModeToEffect(thisMode);  
   byte tmp_game = mapModeToGame(thisMode);
