@@ -16,6 +16,7 @@
   <div class="connection-bar">
     <div class="status-indicator" id="status-ind"></div>
     <span id="status-text">Поиск матрицы...</span>
+    <span id="status-ssid" style="font-size:0.75rem; color:var(--text-muted); margin-left:4px;"></span>
     <button class="btn-icon" onclick="openIpModal()" title="Настроить IP">⚙️</button>
   </div>
 </header>
@@ -207,12 +208,21 @@
       <div class="card-header">
         <span class="card-title">Сетевое подключение платы</span>
       </div>
-      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px;">
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:12px; line-height:1.6;">
+        Подключено к Wi-Fi: <strong id="cur-ssid-display" style="color:var(--accent);">Определяется...</strong><br>
         Текущий адрес матрицы: <strong id="cur-host-display" style="color:var(--accent);">http://matrix.local</strong>
       </p>
       <input type="text" id="manual-host-input" placeholder="http://matrix.local или IP адрес (например 192.168.1.50)">
       <button class="btn btn-primary" style="width:100%; margin-bottom:12px;" onclick="saveManualHost()">Сохранить и подключиться</button>
-      <button class="btn" style="width:100%;" onclick="startIpScan()">🔍 Сканировать локальную сеть</button>
+      <button class="btn" style="width:100%; margin-bottom:14px;" onclick="startIpScan()">🔍 Сканировать локальную сеть</button>
+
+      <div style="background:rgba(168,85,247,0.1); border:1px solid rgba(168,85,247,0.3); border-radius:10px; padding:12px; font-size:0.82rem;">
+        <span style="color:#c084fc; font-weight:700;">🟣 Автономный офлайн-пульт платы:</span>
+        <p style="color:var(--text-muted); margin:4px 0 8px 0;">На самой плате ESP8266 работает независимый запасной пульт в фиолетовых тонах (работает даже без интернета).</p>
+        <a id="link-offline-portal" href="http://matrix.local/" target="_blank" style="color:#c084fc; text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:4px;">
+          Открыть фиолетовый оффлайн-пульт платы ↗
+        </a>
+      </div>
     </div>
 
     <!-- Зона сброса Wi-Fi -->

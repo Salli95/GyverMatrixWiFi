@@ -4,6 +4,7 @@ import urllib.request
 import urllib.error
 import urllib.parse
 import socket
+import subprocess
 import time
 import os
 import sys
@@ -11,11 +12,29 @@ import sys
 PORT = 3000
 WEB_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Кеш для быстрого mDNS-разрешения (чтобы не ждать DNS-запроса каждый раз)
+# Кеш для быстрого mDNS-разрешения
 _dns_cache = {
     'ip': None,
     'expires': 0
 }
+
+def is_private_ip(ip):
+    if not ip or not isinstance(ip, str):
+        return False
+    parts = ip.split('.')
+    if len(parts) != 4:
+        return False
+    try:
+        nums = [int(p) for p in parts]
+        if nums[0] == 10:
+            return True
+        if nums[0] == 192 and nums[1] == 168:
+            return True
+        if nums[0] == 172 and 16 <= nums[1] <= 31:
+            return True
+    except ValueError:
+        return False
+    return False
 
 def resolve_matrix_host():
     """Разрешает matrix.local в реальный IP с кешированием на 60 секунд."""
@@ -23,15 +42,29 @@ def resolve_matrix_host():
     if _dns_cache['ip'] and now < _dns_cache['expires']:
         return f"http://{_dns_cache['ip']}"
     
+    # 1. Попытка через mDNS (matrix.local)
     try:
         ip = socket.gethostbyname("matrix.local")
-        if ip and ip.strip():
+        if ip and is_private_ip(ip.strip()):
             _dns_cache['ip'] = ip.strip()
             _dns_cache['expires'] = now + 60
             return f"http://{ip.strip()}"
     except Exception:
         pass
     
+    # 2. Быстрый поиск по MAC-адресу платы в ARP таблице
+    try:
+        out = subprocess.check_output("arp -a", shell=True).decode('cp866', errors='ignore')
+        for line in out.splitlines():
+            if "84-f3-eb-23-ea-6a" in line.lower():
+                found_ip = line.split()[0]
+                if is_private_ip(found_ip):
+                    _dns_cache['ip'] = found_ip
+                    _dns_cache['expires'] = now + 60
+                    return f"http://{found_ip}"
+    except Exception:
+        pass
+
     return "http://matrix.local"
 
 class ThreadingTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
@@ -71,13 +104,15 @@ class ProxyAndStaticHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # 1. Custom header от фронтенда (фронтенд передает активный IP или хост)
         target = self.headers.get('X-Matrix-Target')
         if target and target.strip():
-            return target.strip().rstrip('/')
+            clean = target.strip().rstrip('/')
+            if is_private_ip(clean.replace('http://', '')) or 'matrix.local' in clean:
+                return clean
         
         # 2. Переменная окружения (если задана)
         if 'MATRIX_TARGET' in os.environ and os.environ['MATRIX_TARGET']:
             return os.environ['MATRIX_TARGET'].rstrip('/')
 
-        # 3. Универсальное автоматическое разрешение mDNS (matrix.local работает в любой Wi-Fi сети)
+        # 3. Универсальное автоматическое разрешение mDNS / ARP
         return resolve_matrix_host()
 
     def proxy_request(self, method):
@@ -110,7 +145,7 @@ class ProxyAndStaticHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             if method != 'HEAD':
                 self.wfile.write(e.read())
         except Exception as e:
-            # Если matrix.local не ответил, пробуем стандартный AP режим матрицы (192.168.4.1)
+            # Fallback к AP режиму матрицы
             if "matrix.local" in target_base:
                 try:
                     fallback_url = f"http://192.168.4.1{self.path}"

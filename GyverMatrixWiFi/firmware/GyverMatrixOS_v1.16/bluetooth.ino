@@ -91,14 +91,8 @@ void bluetoothRoutine() {
     
     if (!BTcontrol && effectsFlag && !isColorEffect(effect)) effectsFlag = false;
 
-    // При яркости = 1 остаются гореть только красные светодиоды и все эффекты теряют вид.
-    // поэтому отображать эффект "ночные часы"
-    byte br = specialMode ? specialBrightness : globalBrightness;
-    if (br == 1 && !(loadingFlag || isAlarming)) {
-      doEffectWithOverlay(DEMO_CLOCK);    
-    } 
-    
-    else if (runningFlag && !isAlarming) {                         // бегущая строка - Running Text
+    // Убран принудительный показ красных ночных часов при яркости 1
+    if (runningFlag && !isAlarming) {                         // бегущая строка - Running Text
       String txt = runningText;
       uint32_t txtColor = (thisMode == DEMO_TEXT_1) ? 1 : ((thisMode == DEMO_TEXT_2) ? 2 : globalColor);
       if (wifi_print_ip && (wifi_current_ip.length() > 0)) {

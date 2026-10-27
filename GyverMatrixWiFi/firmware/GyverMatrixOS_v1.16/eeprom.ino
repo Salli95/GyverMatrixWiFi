@@ -75,6 +75,21 @@ void loadSettings() {
 
   // Инициализировано ли EEPROM
   bool isInitialized = EEPROMread(0) == EEPROM_OK;  
+  
+  if (EEPROMread(451) != 88) {
+    for (int i = 0; i < MODES_AMOUNT; i++) {
+      EEPROMwrite(400 + i, 128); // Всем эффектам по умолчанию 50% яркости (середина)
+    }
+    // Сбросить ошибочный static IP 128.128.128.128 в 0 для DHCP
+    EEPROMwrite(150, 0);
+    EEPROMwrite(151, 0);
+    EEPROMwrite(152, 0);
+    EEPROMwrite(153, 0);
+    IP_STA[0] = 0; IP_STA[1] = 0; IP_STA[2] = 0; IP_STA[3] = 0;
+    EEPROMwrite(451, 88);
+    EEPROMwrite(1, 128);
+    EEPROM.commit();
+  }
     
   if (isInitialized) {    
     globalBrightness = getMaxBrightness();
@@ -302,9 +317,9 @@ byte getEffectBrightness(byte effect) {
   if (effect < MODES_AMOUNT) {
     int addr = 400 + effect;
     byte b = EEPROMread(addr);
-    if (b >= 1 && b <= 255) return b;
+    if (b >= 1 && b < 255) return b;
   }
-  return getMaxBrightness();
+  return 128; // По умолчанию середина (50%)
 }
 
 void saveEffectSpeed(byte effect, int speed) {
@@ -381,7 +396,9 @@ int getScrollSpeed() {
 }
 
 byte getMaxBrightness() {
-  return EEPROMread(1);
+  byte b = EEPROMread(1);
+  if (b == 0 || b == 255) return 128;
+  return b;
 }
 
 void saveMaxBrightness(byte brightness) {
@@ -909,11 +926,11 @@ void setGlobalColor(uint32_t color) {
 
 // ----------------------------------------------------------
 
-byte EEPROMread(byte addr) {    
+byte EEPROMread(int addr) {    
   return EEPROM.read(addr);
 }
 
-void EEPROMwrite(byte addr, byte value) {    
+void EEPROMwrite(int addr, byte value) {    
   EEPROM.write(addr, value);
 }
 

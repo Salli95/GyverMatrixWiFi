@@ -30,6 +30,7 @@ void handleRoot() {
 
 void handleGetState() {
   addCorsHeaders();
+  String activeSsid = wifi_connected ? WiFi.SSID() : (strlen(ssid) > 0 ? String(ssid) : String(DEFAULT_AP_NAME));
   String json = "{";
   json += "\"power\":" + String(!isTurnedOff ? "true" : "false") + ",";
   json += "\"mode\":" + String(thisMode) + ",";
@@ -42,6 +43,7 @@ void handleGetState() {
   json += "\"specialMode\":" + String(specialMode ? "true" : "false") + ",";
   json += "\"specialModeId\":" + String(specialModeId) + ",";
   json += "\"ip\":\"" + (wifi_connected ? WiFi.localIP().toString() : WiFi.softAPIP().toString()) + "\",";
+  json += "\"ssid\":\"" + activeSsid + "\",";
   json += "\"apMode\":" + String(!wifi_connected ? "true" : "false");
   json += "}";
   webServer.send(200, "application/json", json);

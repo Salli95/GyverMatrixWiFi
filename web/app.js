@@ -195,6 +195,17 @@ function setConnected(online) {
 
 function applyState(data) {
   const now = Date.now();
+  if (data.ssid) {
+    const elSsid = document.getElementById('cur-ssid-display');
+    if (elSsid) elSsid.textContent = data.ssid + (data.apMode ? ' (Точка доступа)' : '');
+    const elHdrSsid = document.getElementById('status-ssid');
+    if (elHdrSsid) elHdrSsid.textContent = `[Wi-Fi: ${data.ssid}]`;
+    const linkOffline = document.getElementById('link-offline-portal');
+    if (linkOffline && data.ip) {
+      linkOffline.href = `http://${data.ip}/`;
+      linkOffline.textContent = `Открыть фиолетовый оффлайн-пульт платы (http://${data.ip}/) ↗`;
+    }
+  }
   if (now - lastUserInteraction > 3500) {
     // Яркость (1..255)
     if (data.brightness !== undefined) {

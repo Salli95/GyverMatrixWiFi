@@ -209,7 +209,6 @@ void clockColor() {
 
 // нарисовать часы
 void drawClock(byte hrs, byte mins, boolean dots, byte X, byte Y) {
-  if (X > 0) X--; // Смещение циферблата часов на 1 клетку влево
   byte h10 = hrs / 10;
   byte h01 = hrs % 10;
   byte m10 = mins / 10;
@@ -254,7 +253,6 @@ void drawClock(byte hrs, byte mins, boolean dots, byte X, byte Y) {
 
 // нарисовать дату календаря
 void drawCalendar(byte aday, byte amnth, int16_t ayear, boolean dots, byte X, byte Y) {
-  if (X > 0) X--; // Смещение календаря на 1 клетку влево
 
   // Число месяца
   drawDigit3x5(aday / 10, X, Y + 6, clockLED[0]); // шрифт 3x5 в котором 1 - по центру знакоместа - смещать вправо на 1 колонку
