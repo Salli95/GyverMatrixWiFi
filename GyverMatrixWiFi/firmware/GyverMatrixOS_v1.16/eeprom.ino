@@ -850,6 +850,7 @@ void saveStaticIP(byte p1, byte p2, byte p3, byte p4) {
     EEPROMwrite(153, p4);
     eepromModified = true;  
   }
+}
 
 byte getLastMode() {
   byte m = EEPROMread(154);
@@ -863,7 +864,6 @@ void setLastMode(byte mode) {
     eepromModified = true;
     saveSettings();
   }
-}
 }
 
 uint32_t getGlobalColor() {
