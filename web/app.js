@@ -3,7 +3,7 @@
 // Автопоиск матрицы в Wi-Fi сети (IP Scanner) + управление эффектами, текстом и холстом
 // ==============================================================================
 
-let matrixHost = localStorage.getItem('gyver_matrix_host') || 'http://matrix.local';
+let matrixHost = localStorage.getItem('gyver_matrix_host') || 'http://192.168.0.103';
 let isScanning = false;
 let isConnected = false;
 let curColor = '#ff0044';
