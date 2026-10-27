@@ -56,7 +56,7 @@
 #define DEFAULT_AP_NAME "MatrixAP"           // Имя точки доступа по умолчанию 
 #define DEFAULT_AP_PASS "12341234"           // Пароль точки доступа по умолчанию
 #define localPort 2390                       // Порт матрицы для подключения из программы на смартфоне
-byte IP_STA[] = {192, 168, 0, 106};          // Статический адрес матрицы в локальной сети WiFi
+byte IP_STA[] = {0, 0, 0, 0};                // 0,0,0,0 - динамический IP по DHCP
 
 #define DEFAULT_NTP_SERVER "ru.pool.ntp.org" // NTP сервер по умолчанию "time.nist.gov"
 
@@ -720,7 +720,7 @@ void startWiFi() {
     WiFi.begin(ssid, pass);
 
     // Проверка соединения (таймаут 10 секунд)
-    for (int j = 0; j < 10; j++ ) {
+    for (int j = 0; j < 20; j++ ) {
       wifi_connected = WiFi.status() == WL_CONNECTED;
       if (wifi_connected) {
         // Подключение установлено

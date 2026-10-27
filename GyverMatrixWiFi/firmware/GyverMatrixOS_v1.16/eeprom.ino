@@ -898,17 +898,19 @@ void EEPROM_int_write(byte addr, uint16_t num) {
 
 // чтение стоки (макс 32 байта)
 String EEPROM_string_read(byte addr, byte len) {
-   if (len>32) len = 32;
-   char buffer[len+1];
-   memset(buffer,'\0',len+1);
+   if (len > 32) len = 32;
+   char buffer[len + 1];
+   memset(buffer, '\0', len + 1);
    byte i = 0;
    while (i < len) {
-     byte c = EEPROMread(addr+i);
-     if (isAlphaNumeric(c) || isPunct(c))
+     byte c = EEPROMread(addr + i);
+     if (c == 0 || c == 255) break;
+     if (c >= 32 && c <= 126)
         buffer[i++] = c;
      else
-       break;
+        break;
    }
+   buffer[i] = '\0';
    return String(buffer);
 }
 
