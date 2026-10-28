@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#121726"/>
+      <stop offset="100%" stop-color="#060810"/>
+    </linearGradient>
+    <linearGradient id="border" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00ffaa"/>
+      <stop offset="50%" stop-color="#00d4ff"/>
+      <stop offset="100%" stop-color="#b026ff"/>
+    </linearGradient>
+    <radialGradient id="matrixGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00e5ff" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#00e5ff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="ledGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Ambient dark squircle base -->
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#bg)"/>
+  <!-- Ambient center glow -->
+  <circle cx="32" cy="32" r="26" fill="url(#matrixGlow)"/>
+  <!-- Cyber neon gradient border -->
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="none" stroke="url(#border)" stroke-width="2.2"/>
+
+  <!-- Subtle PCB matrix grid dots -->
+  <g opacity="0.15">
+    <circle cx="19" cy="19" r="7.5" fill="#ffffff"/>
+    <circle cx="32" cy="19" r="7.5" fill="#ffffff"/>
+    <circle cx="45" cy="19" r="7.5" fill="#ffffff"/>
+    <circle cx="19" cy="32" r="7.5" fill="#ffffff"/>
+    <circle cx="32" cy="32" r="8" fill="#ffffff"/>
+    <circle cx="45" cy="32" r="7.5" fill="#ffffff"/>
+    <circle cx="19" cy="45" r="7.5" fill="#ffffff"/>
+    <circle cx="32" cy="45" r="7.5" fill="#ffffff"/>
+    <circle cx="45" cy="45" r="7.5" fill="#ffffff"/>
+  </g>
+
+  <!-- LED Matrix Rows (WS2812B RGB LEDs with core highlights) -->
+  <!-- Row 1: Fire & Sun (Red, Orange, Yellow) -->
+  <g filter="url(#ledGlow)">
+    <circle cx="19" cy="19" r="5.2" fill="#ff1744"/>
+    <circle cx="32" cy="19" r="5.2" fill="#ff9100"/>
+    <circle cx="45" cy="19" r="5.2" fill="#ffd600"/>
+
+    <!-- Row 2: Neon Emerald, Electric Cyan, Deep Blue -->
+    <circle cx="19" cy="32" r="5.2" fill="#00e676"/>
+    <circle cx="32" cy="32" r="6" fill="#00e5ff"/>
+    <circle cx="45" cy="32" r="5.2" fill="#2979ff"/>
+
+    <!-- Row 3: Cyber Violet, Hot Magenta, Gyver Mint -->
+    <circle cx="19" cy="45" r="5.2" fill="#d500f9"/>
+    <circle cx="32" cy="45" r="5.2" fill="#ff007f"/>
+    <circle cx="45" cy="45" r="5.2" fill="#00ffaa"/>
+  </g>
+
+  <!-- Super-bright white LED chip emitters (gives realistic WS2812B neon brilliance) -->
+  <circle cx="19" cy="19" r="2.2" fill="#ffffff" opacity="0.95"/>
+  <circle cx="32" cy="19" r="2.2" fill="#ffffff" opacity="0.95"/>
+  <circle cx="45" cy="19" r="2.2" fill="#ffffff" opacity="0.95"/>
+
+  <circle cx="19" cy="32" r="2.2" fill="#ffffff" opacity="0.95"/>
+  <circle cx="32" cy="32" r="2.7" fill="#ffffff"/>
+  <circle cx="45" cy="32" r="2.2" fill="#ffffff" opacity="0.95"/>
+
+  <circle cx="19" cy="45" r="2.2" fill="#ffffff" opacity="0.95"/>
+  <circle cx="32" cy="45" r="2.2" fill="#ffffff" opacity="0.95"/>
+  <circle cx="45" cy="45" r="2.2" fill="#ffffff" opacity="0.95"/>
+</svg>
+

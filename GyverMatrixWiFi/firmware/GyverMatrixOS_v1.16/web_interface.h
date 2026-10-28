@@ -11,6 +11,7 @@ const char PAGE_MAIN[] PROGMEM = R"rawliteral(<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>GyverMatrix • Offline Backup Panel</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='bg' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%23121726'/><stop offset='100%' stop-color='%23060810'/></linearGradient><linearGradient id='border' x1='0%' y1='0%' x2='100%' y2='100%'><stop offset='0%' stop-color='%2300ffaa'/><stop offset='50%' stop-color='%2300d4ff'/><stop offset='100%' stop-color='%23b026ff'/></linearGradient><radialGradient id='matrixGlow' cx='50%' cy='50%' r='50%'><stop offset='0%' stop-color='%2300e5ff' stop-opacity='0.3'/><stop offset='100%' stop-color='%2300e5ff' stop-opacity='0'/></radialGradient><filter id='ledGlow' x='-50%' y='-50%' width='200%' height='200%'><feGaussianBlur in='SourceGraphic' stdDeviation='2.2' result='blur'/><feMerge><feMergeNode in='blur'/><feMergeNode in='SourceGraphic'/></feMerge></filter></defs><rect x='2' y='2' width='60' height='60' rx='15' fill='url(%23bg)'/><circle cx='32' cy='32' r='26' fill='url(%23matrixGlow)'/><rect x='2' y='2' width='60' height='60' rx='15' fill='none' stroke='url(%23border)' stroke-width='2.2'/><g opacity='0.15'><circle cx='19' cy='19' r='7.5' fill='%23ffffff'/><circle cx='32' cy='19' r='7.5' fill='%23ffffff'/><circle cx='45' cy='19' r='7.5' fill='%23ffffff'/><circle cx='19' cy='32' r='7.5' fill='%23ffffff'/><circle cx='32' cy='32' r='8' fill='%23ffffff'/><circle cx='45' cy='32' r='7.5' fill='%23ffffff'/><circle cx='19' cy='45' r='7.5' fill='%23ffffff'/><circle cx='32' cy='45' r='7.5' fill='%23ffffff'/><circle cx='45' cy='45' r='7.5' fill='%23ffffff'/></g><g filter='url(%23ledGlow)'><circle cx='19' cy='19' r='5.2' fill='%23ff1744'/><circle cx='32' cy='19' r='5.2' fill='%23ff9100'/><circle cx='45' cy='19' r='5.2' fill='%23ffd600'/><circle cx='19' cy='32' r='5.2' fill='%2300e676'/><circle cx='32' cy='32' r='6' fill='%2300e5ff'/><circle cx='45' cy='32' r='5.2' fill='%232979ff'/><circle cx='19' cy='45' r='5.2' fill='%23d500f9'/><circle cx='32' cy='45' r='5.2' fill='%23ff007f'/><circle cx='45' cy='45' r='5.2' fill='%2300ffaa'/></g><circle cx='19' cy='19' r='2.2' fill='%23ffffff' opacity='0.95'/><circle cx='32' cy='19' r='2.2' fill='%23ffffff' opacity='0.95'/><circle cx='45' cy='19' r='2.2' fill='%23ffffff' opacity='0.95'/><circle cx='19' cy='32' r='2.2' fill='%23ffffff' opacity='0.95'/><circle cx='32' cy='32' r='2.7' fill='%23ffffff'/><circle cx='45' cy='32' r='2.2' fill='%23ffffff' opacity='0.95'/><circle cx='19' cy='45' r='2.2' fill='%23ffffff' opacity='0.95'/><circle cx='32' cy='45' r='2.2' fill='%23ffffff' opacity='0.95'/><circle cx='45' cy='45' r='2.2' fill='%23ffffff' opacity='0.95'/></svg>">
 <style>
 :root {
   --bg: #0b0714;
@@ -92,7 +93,7 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22p
 <main class="container">
 
   <!-- 1. ГЛАВНАЯ -->
-  <div id="tab-main" class="tab-content active">
+  <div id="tab-main" class="tab-content">
     <div class="card">
       <div class="card-title">
         <span>Питание и дисплей</span>
@@ -131,7 +132,7 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22p
   </div>
 
   <!-- 2. ЭФФЕКТЫ -->
-  <div id="tab-effects" class="tab-content">
+  <div id="tab-effects" class="tab-content active">
     <div class="card">
       <div class="card-title">Каталог эффектов</div>
       <div class="categories">
@@ -222,8 +223,8 @@ input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22p
 </main>
 
 <nav class="nav-bar">
-  <button class="nav-item active" onclick="switchNav('main', this)">🏠<span>Главная</span></button>
-  <button class="nav-item" onclick="switchNav('effects', this)">⭐<span>Эффекты</span></button>
+  <button class="nav-item" onclick="switchNav('main', this)">🏠<span>Главная</span></button>
+  <button class="nav-item active" onclick="switchNav('effects', this)">⭐<span>Эффекты</span></button>
   <button class="nav-item" onclick="switchNav('text', this)">🔤<span>Текст</span></button>
   <button class="nav-item" onclick="switchNav('draw', this)">🎨<span>Рисовать</span></button>
   <button class="nav-item" onclick="switchNav('games', this)">🎮<span>Игры</span></button>
